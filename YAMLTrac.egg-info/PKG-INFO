@@ -1,0 +1,10 @@
+Metadata-Version: 1.0
+Name: YAMLTrac
+Version: 0.1dev
+Summary: Bug tracker that uses versioned YAML for storage
+Home-page: http://douglas.mayle.org
+Author: Douglas Mayle
+Author-email: UNKNOWN
+License: LGPL
+Description: UNKNOWN
+Platform: UNKNOWN
