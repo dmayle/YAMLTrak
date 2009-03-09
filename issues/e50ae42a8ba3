@@ -1,0 +1,6 @@
+title: Prototype an entirely new style of issue tracking that uses versioned documents for a ticket database.
+description: Issue tracking using a versioned database would represent an entirely new paradigm in issue management.  
+estimate:
+status: Open
+priority: normal
+owner: http://douglas.mayle.org

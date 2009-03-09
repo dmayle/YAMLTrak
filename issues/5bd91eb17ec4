@@ -1,0 +1,3 @@
+title: Add visuals to show the state of the repository.
+description: Set up a PREVIEW background if there are uncommitted files.  Enable commit button.
+estimate: 3 days
