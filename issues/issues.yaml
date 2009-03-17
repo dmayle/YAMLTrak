@@ -15,7 +15,7 @@ skeleton:
 
 81c01c88a038:
   title: Set up system for hash based ticket numbers
-  description: Set the tag 'YAMLTrac-ticket-tip' with a commit message of 'TICKET: Ticket title' and use the commit version as the ticket number.
+  description: "Set the tag 'YAMLTrac-ticket-tip' with a commit message of 'TICKET: Ticket title' and use the commit version as the ticket number."
   estimate: 1 day
 e50ae42a8ba3:
   title: Prototype an entirely new style of issue tracking that uses versioned documents for a ticket database.
