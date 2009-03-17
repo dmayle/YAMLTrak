@@ -19,6 +19,7 @@ setup(name='YAMLTrac',
       zip_safe=True,
       install_requires=[
           # -*- Extra requirements: -*-
+          "PyYaml",
       ],
       entry_points="""
       # -*- Entry points: -*-
