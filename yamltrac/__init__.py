@@ -1,7 +1,9 @@
 #
 from __future__ import with_statement
 import yaml
+from mercurial import hg, commands
 from os import path
+NEW_TICKET_TAG='YAMLTrac-new-ticket'
 
 def issues(repositories=[], dbfolder='issues', status=['open']):
     """Return the list of issues with the given statuses in dictionary form"""
@@ -32,6 +34,7 @@ def issues(repositories=[], dbfolder='issues', status=['open']):
     return issues
 
 def issue(repositories=[], dbfolder='issues', id=None, status=['open']):
+    # Change this to only accept one repository and to return a history
     issue = None
     for repo in repositories:
         try:
@@ -41,3 +44,24 @@ def issue(repositories=[], dbfolder='issues', id=None, status=['open']):
             # Not all listed repositories have an issue tracking database
             pass
     return issue
+
+def add(repository, issue, dbfolder='issues', status=['open']):
+    myui = ui.ui()
+    repo = hg.repository(myui, repository)
+    # This can fail in an empty repository.  Handle this
+    commands.tag(myui, repo, NEW_TICKET_TAG, force=True, message='TICKETPREP: %s' % issue.title)
+    context = repo['tip']
+    ticketid = ''.join('%x' % ord(letter) for letter in context.node())
+    try:
+        with open(path.join(repository, dbfolder, ticketid), 'w') as issuesfile:
+            issuesfile.write(yaml.safe_dump(issue))
+    except IOError:
+        return false
+    try:
+        with open(path.join(repository, dbfolder, 'issues.yaml'), 'r') as issuesfile:
+            issues = yaml.load(issuesfile.read())
+        with open(path.join(repository, dbfolder, 'issues.yaml'), 'w') as issuesfile:
+            issues[ticketid] = issue
+            issuesfile.write(yaml.safe_dump(issues))
+    except IOError:
+        return false
