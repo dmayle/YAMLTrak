@@ -1,7 +1,7 @@
 #
 from __future__ import with_statement
 import yaml
-from mercurial import hg, commands
+from mercurial import hg, commands, ui
 from os import path
 NEW_TICKET_TAG='YAMLTrac-new-ticket'
 
@@ -49,12 +49,13 @@ def add(repository, issue, dbfolder='issues', status=['open']):
     myui = ui.ui()
     repo = hg.repository(myui, repository)
     # This can fail in an empty repository.  Handle this
-    commands.tag(myui, repo, NEW_TICKET_TAG, force=True, message='TICKETPREP: %s' % issue.title)
+    commands.tag(myui, repo, NEW_TICKET_TAG, force=True, message='TICKETPREP: %s' % issue['title'])
     context = repo['tip']
     ticketid = ''.join('%x' % ord(letter) for letter in context.node())
     try:
         with open(path.join(repository, dbfolder, ticketid), 'w') as issuesfile:
             issuesfile.write(yaml.safe_dump(issue))
+        commands.add(myui, repo, path.join(repository, dbfolder, ticketid))
     except IOError:
         return false
     try:
