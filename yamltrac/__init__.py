@@ -54,7 +54,7 @@ def add(repository, issue, dbfolder='issues', status=['open']):
     ticketid = ''.join('%x' % ord(letter) for letter in context.node())
     try:
         with open(path.join(repository, dbfolder, ticketid), 'w') as issuesfile:
-            issuesfile.write(yaml.safe_dump(issue))
+            issuesfile.write(yaml.safe_dump(issue, default_flow_style=False))
         commands.add(myui, repo, path.join(repository, dbfolder, ticketid))
     except IOError:
         return false
@@ -63,6 +63,20 @@ def add(repository, issue, dbfolder='issues', status=['open']):
             issues = yaml.load(issuesfile.read())
         with open(path.join(repository, dbfolder, 'issues.yaml'), 'w') as issuesfile:
             issues[ticketid] = issue
-            issuesfile.write(yaml.safe_dump(issues))
+            issuesfile.write(yaml.safe_dump(issues, default_flow_style=False))
+    except IOError:
+        return false
+
+def close(repository, ticketid, dbfolder='issues', status=['open']):
+    # This just deletes the ticket, we should keep them around temporarily and call it fixed.
+    myui = ui.ui()
+    repo = hg.repository(myui, repository)
+    commands.remove(myui, repo, path.join(repository, dbfolder, ticketid))
+    try:
+        with open(path.join(repository, dbfolder, 'issues.yaml'), 'r') as issuesfile:
+            issues = yaml.load(issuesfile.read())
+        with open(path.join(repository, dbfolder, 'issues.yaml'), 'w') as issuesfile:
+            del issues[ticketid]
+            issuesfile.write(yaml.safe_dump(issues, default_flow_style=False))
     except IOError:
         return false
