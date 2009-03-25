@@ -109,7 +109,7 @@ def issue(repositories=[], dbfolder='issues', id=None, status=['open']):
 
 def _hex_node(node_binary):
     """Convert a binary node string into a 40-digit hex string"""
-    return ''.join('%x' % ord(letter) for letter in node_binary)
+    return ''.join('%0.2x' % ord(letter) for letter in node_binary)
 
 def add(repository, issue, dbfolder='issues', status=['open']):
     myui = ui.ui()
