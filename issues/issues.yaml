@@ -1,30 +1,41 @@
 1a5d71f9bc66:
   description: Create a detailed view using the history of the ticket to show the
     changes and conversation.
+  status: open
   estimate: 16 hours
   title: Add support for the detailed view of a ticket.
 5bd91eb17ec4:
   description: Set up a PREVIEW background if there are uncommitted files.  Enable
     commit button.
+  status: open
   estimate: 3 days
   title: Add visuals to show the state of the repository.
 81c01c88a038:
   description: 'Set the tag ''YAMLTrac-ticket-tip'' with a commit message of ''TICKET:
     Ticket title'' and use the commit version as the ticket number.'
+  status: open
   estimate: 1 day
   title: Set up system for hash based ticket numbers
 87c3dc730817:
   description: Write full documentation for using the software.  This includes theming
     tutorials.
+  status: open
   estimate: 4 weeks
   title: Write good documentation.
 92adaac122607474a3c5f2e047c592e55feb962:
   description: Add the fixing option so that a ticket can be fixed and stick around
+  status: open
   estimate: 1 Day
   title: Add Support for fixing a ticket
+9a70ad8b46f7f040a805acbe973c4cef317447f:
+  description: Create a ticket in my private repo
+  status: open
+  estimate: 5 Minutes
+  title: Work in my repo
 e50ae42a8ba3:
   description: Issue tracking using a versioned database would represent an entirely
     new paradigm in issue management.
+  status: open
   estimate: null
   title: Prototype an entirely new style of issue tracking that uses versioned documents
     for a ticket database.
@@ -32,6 +43,7 @@ skeleton:
   comment: The current comment on this ticket.
   component: A component of the project affected by this ticket
   description: A detailed description of this ticket.
+  status: The current status of the ticket.
   estimate: A time estimate for completion
   keywords: Any keywords covered by this ticket
   milestone: The development milestone that this ticket is attached to.

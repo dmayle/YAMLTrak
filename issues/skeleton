@@ -4,7 +4,7 @@ skeleton:
   description: A detailed description of this ticket.
   #Reporter is handled by versioning
   priority: The ticket priority
-  component: A component of the project affected by this ticket
+  #Component handled by repo source
   severity: The severity of this project
   owner: The person currently responsible for this ticket
   milestone: The development milestone that this ticket is attached to. # Should this be kept here?

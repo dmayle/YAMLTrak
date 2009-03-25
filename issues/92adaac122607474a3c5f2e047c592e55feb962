@@ -1,3 +1,5 @@
 description: Add the fixing option so that a ticket can be fixed and stick around
 estimate: 1 Day
 title: Add Support for fixing a ticket
+status: open
+comments: Do we use new terminology?
