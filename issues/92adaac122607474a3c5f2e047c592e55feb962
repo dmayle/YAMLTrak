@@ -2,4 +2,4 @@ description: Add the fixing option so that a ticket can be fixed and stick aroun
 estimate: 1 Day
 title: Add Support for fixing a ticket
 status: open
-comments: Do we use new terminology?
+comments: Preliminary support for ticket statuses has been added.
