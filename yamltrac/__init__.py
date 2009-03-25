@@ -39,28 +39,28 @@ def issuediff(revx, revy):
     revykeys = sorted(revy.keys())
     x = 0
     y = 0
-    added = []
-    removed = []
-    changed = []
+    added = {}
+    removed = {}
+    changed = {}
     while x < len(revxkeys) or y < len(revykeys):
         if x == len(revxkeys):
             # Exhausted source keys, the rest are added properties
-            added.append({revykeys[y]: revy[revykeys[y]]})
+            added[revykeys[y]] = revy[revykeys[y]]
         elif y == len(revykeys):
             # Exhausted dest keys, the rest are removed properties
-            removed.append({revxkeys[x]: revx[revxkeys[x]]})
+            removed[revxkeys[x]] = revx[revxkeys[x]]
         elif revxkeys[x] < revykeys[y]:
             # This particular key exists in the source, and not the dest
-            removed.append({revxkeys[x]: revx[revxkeys[x]]})
+            removed[revxkeys[x]] = revx[revxkeys[x]]
             x += 1
         elif revxkeys[x] > revykeys[y]:
             # This particular key exists in the dest, and not the source
-            added.append({revykeys[y]: revy[revykeys[y]]})
+            added[revykeys[y]] = revy[revykeys[y]]
             y += 1
         else:
             # Both versions have this key, we'll look for changes.
             if revx[revxkeys[x]] != revy[revykeys[y]]:
-                changed.append({revykeys[x]: [revx[revxkeys[x]], revy[revykeys[y]]]})
+                changed[revxkeys[x]] = (revx[revxkeys[x]], revy[revykeys[y]])
             x += 1
             y += 1
     if not added and not removed and not changed:
@@ -80,14 +80,19 @@ def issue(repositories=[], dbfolder='issues', id=None, status=['open']):
             repo = hg.repository(myui, repo)
             filectxt = repo['tip'][path.join(dbfolder, id)]
             filerevid = filectxt.filerev()
+
+            # By default, we're working with the context of tip.  Update to the
+            # context from the latest revision.
+            filectxt = filectxt.filectx(filerevid)
             oldrev = issue[0]['data']
+
             while True:
                 newrev = yaml.load(filectxt.data())
                 issue.append({'data': newrev,
                               'user': filectxt.user(),
                               'date': util.datestr(filectxt.date()),
                               'files': filectxt.files(),
-                              'diff': issuediff(oldrev, newrev),
+                              'diff': issuediff(newrev, oldrev),
                               'node': _hex_node(filectxt.node())})
                 filerevid = filectxt.filerev() - 1
                 if filerevid < 0:
