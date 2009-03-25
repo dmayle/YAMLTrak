@@ -1,3 +1,5 @@
 title: Add support for the detailed view of a ticket.
 description: Create a detailed view using the history of the ticket to show the changes and conversation.
+status: open
+comment: Build initial version.  The links are broken, as is the ticket diff.
 estimate: 16 hours
