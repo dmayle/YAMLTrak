@@ -7,7 +7,7 @@
   description: Create a detailed view using the history of the ticket to show the
     changes and conversation.
   estimate: 16 hours
-  status: open
+  status: closed
   title: Add support for the detailed view of a ticket.
 1b2372b0ef98910689e2b81fd0ead8e44d6b3486:
   description: Add the necessary form and actions to edit issues.

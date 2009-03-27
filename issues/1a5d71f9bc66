@@ -1,5 +1,7 @@
-title: Add support for the detailed view of a ticket.
-description: Create a detailed view using the history of the ticket to show the changes and conversation.
-status: open
-comment: Update code, get correct set of changesets and display them. The links are still broken, as is the ticket diff.
+comment: Got a pretty good detailed view now, using the revision history.
+description: Create a detailed view using the history of the ticket to show the changes
+  and conversation.
 estimate: 16 hours
+priority: green, red, or black
+status: closed
+title: Add support for the detailed view of a ticket.
