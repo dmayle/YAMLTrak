@@ -1,0 +1,6 @@
+comment: Opening ticket
+description: Make sure the index includes all repositories, and the links to each
+  ticket go to the correct repository
+estimate: 2 Hours
+status: open
+title: Do a better job of indexing and linking to multiple repositories
