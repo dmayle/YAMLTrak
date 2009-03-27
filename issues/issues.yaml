@@ -20,10 +20,10 @@
   status: closed
   title: Add visuals to show the state of the repository.
 81c01c88a038:
-  description: 'Set the tag ''YAMLTrac-ticket-tip'' with a commit message of ''TICKET:
+  description: 'Set the tag ''YAMLTrac-new-ticket'' with a commit message of ''TICKET:
     Ticket title'' and use the commit version as the ticket number.'
   estimate: 1 day
-  status: open
+  status: closed
   title: Set up system for hash based ticket numbers
 8497b6429c72ea2153bf3bde83bf7d734a57413f:
   description: Add the ability to edit the tickets

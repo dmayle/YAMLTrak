@@ -1,3 +1,7 @@
-title: Set up system for hash based ticket numbers
-description: Set the tag YAMLTrac-ticket-tip with a commit message of TICKET Ticket title and use the commit version as the ticket number.
+comment: Uses the tagging system to generate ids from version ids
+description: 'Set the tag ''YAMLTrac-new-ticket'' with a commit message of ''TICKET:
+  Ticket title'' and use the commit version as the ticket number.'
 estimate: 1 day
+priority: green, red, or black
+status: closed
+title: Set up system for hash based ticket numbers
