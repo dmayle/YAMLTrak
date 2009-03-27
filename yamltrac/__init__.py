@@ -1,4 +1,7 @@
-#
+# Remember when editing issues to always perform work on the issue file first,
+# and then the index.  This way the issue file is the canonical storage medium,
+# and the index is just that.  All code will make sure to use the same version
+# stored in the issue file when updating the index.
 from __future__ import with_statement
 import yaml
 from mercurial import hg, commands, ui, util
@@ -10,8 +13,8 @@ def issues(repositories=[], dbfolder='issues', status=['open']):
     issues = {}
     for repo in repositories:
         try:
-            with open(path.join(repo, dbfolder, 'issues.yaml')) as issuesfile:
-                issues[path.basename(repo)] = dict(issue for issue in yaml.load(issuesfile.read()).iteritems() if issue[0] != 'skeleton' and issue[1].get('status') == 'open')
+            with open(path.join(repo, dbfolder, 'issues.yaml')) as indexfile:
+                issues[path.basename(repo)] = dict(issue for issue in yaml.load(indexfile.read()).iteritems() if issue[0] != 'skeleton' and issue[1].get('status') == 'open')
         except IOError:
             # Not all listed repositories have an issue tracking database
             pass
@@ -21,7 +24,7 @@ def issues(repositories=[], dbfolder='issues', status=['open']):
             # We'll take a shortcut and look at the word.
             try:
                 timescale = issue['estimate'].split()[1].rstrip('s')
-                if timescale.lower() == 'hour':
+                if timescale.lower() == 'hour' or timescale.lower() == 'minute':
                     scale = 'short'
                 elif timescale.lower() == 'day':
                     scale = 'medium'
@@ -68,6 +71,32 @@ def issuediff(revx, revy):
     return added, removed, changed
 
             
+def edit_issue(repository=None, dbfolder='issues', issue=None, id=None):
+    """Modify the copy of the issue on disk, both in it's file, and the index."""
+    if not issue or not id:
+        return
+    try:
+        with open(path.join(repository, dbfolder, id), 'w') as issuefile:
+            issuefile.write(yaml.safe_dump(issue, default_flow_style=False))
+    except IOError:
+        return false
+
+    try:
+        with open(path.join(repository, dbfolder, 'issues.yaml'), 'r') as indexfile:
+            index = yaml.load(indexfile.read())
+
+        # We only write out the properties listed in the skeleton to the index.
+        indexissue = {}
+        for key in index['skeleton']:
+            if key in issue:
+                indexissue[key] = issue[key]
+        index[id] = indexissue
+
+        with open(path.join(repository, dbfolder, 'issues.yaml'), 'w') as indexfile:
+            indexfile.write(yaml.safe_dump(index, default_flow_style=False))
+    except IOError:
+        return false
+
 def issue(repositories=[], dbfolder='issues', id=None, status=['open']):
     # Use revision to walk backwards intelligently.
     # Change this to only accept one repository and to return a history
@@ -112,6 +141,10 @@ def _hex_node(node_binary):
     return ''.join('%0.2x' % ord(letter) for letter in node_binary)
 
 def add(repository, issue, dbfolder='issues', status=['open']):
+    if 'status' not in issue:
+        issue['status'] = 'open'
+    if 'comment' not in issue:
+        issue['comment'] = 'Opening ticket'
     myui = ui.ui()
     repo = hg.repository(myui, repository)
     # This can fail in an empty repository.  Handle this
@@ -119,30 +152,63 @@ def add(repository, issue, dbfolder='issues', status=['open']):
     context = repo['tip']
     ticketid = _hex_node(context.node())
     try:
-        with open(path.join(repository, dbfolder, ticketid), 'w') as issuesfile:
-            issuesfile.write(yaml.safe_dump(issue, default_flow_style=False))
+        with open(path.join(repository, dbfolder, ticketid), 'w') as issuefile:
+            issuefile.write(yaml.safe_dump(issue, default_flow_style=False))
         commands.add(myui, repo, path.join(repository, dbfolder, ticketid))
     except IOError:
         return false
     try:
-        with open(path.join(repository, dbfolder, 'issues.yaml'), 'r') as issuesfile:
-            issues = yaml.load(issuesfile.read())
-        with open(path.join(repository, dbfolder, 'issues.yaml'), 'w') as issuesfile:
+        with open(path.join(repository, dbfolder, 'issues.yaml'), 'r') as indexfile:
+            issues = yaml.load(indexfile.read())
+        with open(path.join(repository, dbfolder, 'issues.yaml'), 'w') as indexfile:
             issues[ticketid] = issue
-            issuesfile.write(yaml.safe_dump(issues, default_flow_style=False))
+            indexfile.write(yaml.safe_dump(issues, default_flow_style=False))
     except IOError:
         return false
 
-def close(repository, ticketid, dbfolder='issues', status=['open']):
+def close(repository, id, dbfolder='issues'):
+    """Sets the status of the issue on disk to close, both in it's file, and the index."""
+    if not id:
+        return false
+    try:
+        with open(path.join(repository, dbfolder, id)) as issuefile:
+            issue = yaml.load(issuefile.read())
+        issue['status'] = 'closed'
+        with open(path.join(repository, dbfolder, id), 'w') as issuefile:
+            issuefile.write(yaml.safe_dump(issue, default_flow_style=False))
+    except IOError:
+        return false
+
+    # For the index pass, we always make sure to use the data in the full
+    # issue. This helps to prevent problems of synchronization from the
+    # non-normalized database.
+    try:
+        with open(path.join(repository, dbfolder, 'issues.yaml'), 'r') as indexfile:
+            index = yaml.load(indexfile.read())
+
+        # We only write out the properties listed in the skeleton to the index.
+        indexissue = {}
+        for key in index['skeleton']:
+            if key in issue:
+                indexissue[key] = issue[key]
+        index[id] = indexissue
+
+        with open(path.join(repository, dbfolder, 'issues.yaml'), 'w') as indexfile:
+            indexfile.write(yaml.safe_dump(index, default_flow_style=False))
+    except IOError:
+        return false
+
+def purge(repository, ticketid, dbfolder='issues', status=['open']):
     # This just deletes the ticket, we should keep them around temporarily and call it fixed.
+    return True
     myui = ui.ui()
     repo = hg.repository(myui, repository)
     commands.remove(myui, repo, path.join(repository, dbfolder, ticketid))
     try:
-        with open(path.join(repository, dbfolder, 'issues.yaml'), 'r') as issuesfile:
-            issues = yaml.load(issuesfile.read())
-        with open(path.join(repository, dbfolder, 'issues.yaml'), 'w') as issuesfile:
+        with open(path.join(repository, dbfolder, 'issues.yaml'), 'r') as indexfile:
+            issues = yaml.load(indexfile.read())
+        with open(path.join(repository, dbfolder, 'issues.yaml'), 'w') as indexfile:
             del issues[ticketid]
-            issuesfile.write(yaml.safe_dump(issues, default_flow_style=False))
+            indexfile.write(yaml.safe_dump(issues, default_flow_style=False))
     except IOError:
         return false

@@ -1,0 +1,6 @@
+description: Update the system to use a repository id in the url to more clearly distinguish
+  between tickets belonging in a different repository
+status: open
+estimate: 1 Day
+comments: Just starting
+title: Update URL Structure to better handle multiple repositories

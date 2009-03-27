@@ -1,14 +1,12 @@
 skeleton:
-  status: The current status of the ticket
-  title: A title for the ticket
+  comment: The current comment on this ticket.
+  component: A component of the project affected by this ticket
   description: A detailed description of this ticket.
-  #Reporter is handled by versioning
-  priority: The ticket priority
-  #Component handled by repo source
-  severity: The severity of this project
-  owner: The person currently responsible for this ticket
-  milestone: The development milestone that this ticket is attached to. # Should this be kept here?
-  #Verion is handled by versioning
+  status: The current status of the ticket.
+  estimate: A time estimate for completion
   keywords: Any keywords covered by this ticket
-  comment:  The current comment on this ticket.
-
+  milestone: The development milestone that this ticket is attached to.
+  owner: The person currently responsible for this ticket
+  priority: The ticket priority
+  severity: The severity of this project
+  title: A title for the ticket
