@@ -14,7 +14,7 @@ def issues(repositories=[], dbfolder='issues', status=['open']):
     for repo in repositories:
         try:
             with open(path.join(repo, dbfolder, 'issues.yaml')) as indexfile:
-                issues[path.basename(repo)] = dict(issue for issue in yaml.load(indexfile.read()).iteritems() if issue[0] != 'skeleton' and issue[1].get('status') == 'open')
+                issues[path.basename(repo)] = dict(issue for issue in yaml.load(indexfile.read()).iteritems() if issue[0] != 'skeleton' and issue[1].get('status', 'open') == 'open')
         except IOError:
             # Not all listed repositories have an issue tracking database
             pass

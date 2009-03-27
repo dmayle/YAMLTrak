@@ -12,6 +12,7 @@
 1b2372b0ef98910689e2b81fd0ead8e44d6b3486:
   description: Add the necessary form and actions to edit issues.
   estimate: 1 Day
+  status: closed
   title: Add support for editing an issue
 3b6a7f2f8c23b4713840dca97f5c544ee9458439:
   comment: Opening ticket
