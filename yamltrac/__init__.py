@@ -104,10 +104,14 @@ def issue(repositories=[], dbfolder='issues', id=None, status=['open']):
     for repo in repositories:
         try:
             with open(path.join(repo, dbfolder, id)) as issuefile:
-                issue = [{'data':yaml.load(issuefile.read())}]
+                issue = [{'data':yaml.safe_load(issuefile.read())}]
             myui = ui.ui()
             repo = hg.repository(myui, repo)
-            filectxt = repo['tip'][path.join(dbfolder, id)]
+            try:
+                filectxt = repo['tip'][path.join(dbfolder, id)]
+            except LookupError:
+                # This issue hasn't been committed yet
+                return issue
             filerevid = filectxt.filerev()
 
             # By default, we're working with the context of tip.  Update to the
@@ -116,12 +120,20 @@ def issue(repositories=[], dbfolder='issues', id=None, status=['open']):
             oldrev = issue[0]['data']
 
             while True:
-                newrev = yaml.load(filectxt.data())
+                try:
+                    newrev = yaml.safe_load(filectxt.data())
+                except yaml.loader.ScannerError:
+                    # We have to protect from invalid ticket data in the repository
+                    filerevid = filectxt.filerev() - 1
+                    if filerevid < 0:
+                        break
+                    filectxt = filectxt.filectx(filerevid)
+
+                issue[-1]['diff'] = issuediff(newrev, oldrev)
                 issue.append({'data': newrev,
                               'user': filectxt.user(),
                               'date': util.datestr(filectxt.date()),
                               'files': filectxt.files(),
-                              'diff': issuediff(newrev, oldrev),
                               'node': _hex_node(filectxt.node())})
                 filerevid = filectxt.filerev() - 1
                 if filerevid < 0:

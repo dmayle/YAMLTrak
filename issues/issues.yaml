@@ -48,6 +48,12 @@ e50ae42a8ba3:
   status: open
   title: Prototype an entirely new style of issue tracking that uses versioned documents
     for a ticket database.
+f75cd69163ff8d3cf3a35a18db2af92e161551aa:
+  description: The changes for a ticket version are attributed to the older version,
+    rather than the newer for the changes.
+  estimate: 1 Hour
+  status: closed
+  title: Ticket detail history is off by one.
 skeleton:
   description: A detailed description of this ticket.
   estimate: A time estimate for completion

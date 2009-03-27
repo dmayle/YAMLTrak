@@ -1,0 +1,6 @@
+comment: Fixed
+description: The changes for a ticket version are attributed to the older version,
+  rather than the newer for the changes.
+estimate: 1 Hour
+status: closed
+title: Ticket detail history is off by one.
