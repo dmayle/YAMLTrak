@@ -40,6 +40,11 @@
   estimate: 1 Day
   status: closed
   title: Add Support for fixing a ticket
+974d9d44d7b6c535108dabed0004a9886be8625d:
+  description: Use the skeleton to allow for customizable tickets
+  estimate: 1 Hour
+  status: closed
+  title: Clean up ticket creation
 9a70ad8b46f7f040a805acbe973c4cef317447f:
   description: Create a ticket in my private repo
   estimate: 5 Minutes

@@ -1,0 +1,6 @@
+comment: I think this is all good
+description: Use the skeleton to allow for customizable tickets
+estimate: 1 Hour
+priority: green, red, or black
+status: closed
+title: Clean up ticket creation
