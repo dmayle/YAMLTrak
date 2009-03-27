@@ -17,7 +17,7 @@
   description: Set up a PREVIEW background if there are uncommitted files.  Enable
     commit button.
   estimate: 3 days
-  status: open
+  status: closed
   title: Add visuals to show the state of the repository.
 81c01c88a038:
   description: 'Set the tag ''YAMLTrac-ticket-tip'' with a commit message of ''TICKET:

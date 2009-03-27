@@ -1,3 +1,6 @@
-title: Add visuals to show the state of the repository.
-description: Set up a PREVIEW background if there are uncommitted files.  Enable commit button.
+comment: Added body class that is used to add a preview background image
+description: Set up a PREVIEW background if there are uncommitted files.  Enable commit
+  button.
 estimate: 3 days
+status: closed
+title: Add visuals to show the state of the repository.
