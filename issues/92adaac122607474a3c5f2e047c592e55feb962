@@ -1,5 +1,5 @@
+comments: Got it working!
 description: Add the closing option so that a ticket can be fixed and stick around
 estimate: 1 Day
+status: closed
 title: Add Support for fixing a ticket
-status: open
-comments: Functionality added, may be broken

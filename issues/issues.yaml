@@ -32,14 +32,14 @@
   status: open
   title: Write good documentation.
 92adaac122607474a3c5f2e047c592e55feb962:
-  description: Add the fixing option so that a ticket can be fixed and stick around
+  description: Add the closing option so that a ticket can be fixed and stick around
   estimate: 1 Day
-  status: open
+  status: closed
   title: Add Support for fixing a ticket
 9a70ad8b46f7f040a805acbe973c4cef317447f:
   description: Create a ticket in my private repo
   estimate: 5 Minutes
-  status: open
+  status: closed
   title: Work in my repo
 e50ae42a8ba3:
   description: Issue tracking using a versioned database would represent an entirely
