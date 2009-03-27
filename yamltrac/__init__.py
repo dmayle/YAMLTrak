@@ -97,54 +97,55 @@ def edit_issue(repository=None, dbfolder='issues', issue=None, id=None):
     except IOError:
         return false
 
-def issue(repositories=[], dbfolder='issues', id=None, status=['open']):
+def issue(repository=None, dbfolder='issues', id=None, detail=True):
     # Use revision to walk backwards intelligently.
     # Change this to only accept one repository and to return a history
     issue = None
-    for repo in repositories:
+    try:
+        with open(path.join(repository, dbfolder, id)) as issuefile:
+            issue = [{'data':yaml.safe_load(issuefile.read())}]
+        if not detail:
+            return issue
+        myui = ui.ui()
+        repo = hg.repository(myui, repository)
         try:
-            with open(path.join(repo, dbfolder, id)) as issuefile:
-                issue = [{'data':yaml.safe_load(issuefile.read())}]
-            myui = ui.ui()
-            repo = hg.repository(myui, repo)
+            filectxt = repo['tip'][path.join(dbfolder, id)]
+        except LookupError:
+            # This issue hasn't been committed yet
+            return issue
+        filerevid = filectxt.filerev()
+
+        # By default, we're working with the context of tip.  Update to the
+        # context from the latest revision.
+        filectxt = filectxt.filectx(filerevid)
+        oldrev = issue[0]['data']
+
+        while True:
             try:
-                filectxt = repo['tip'][path.join(dbfolder, id)]
-            except LookupError:
-                # This issue hasn't been committed yet
-                return issue
-            filerevid = filectxt.filerev()
-
-            # By default, we're working with the context of tip.  Update to the
-            # context from the latest revision.
-            filectxt = filectxt.filectx(filerevid)
-            oldrev = issue[0]['data']
-
-            while True:
-                try:
-                    newrev = yaml.safe_load(filectxt.data())
-                except yaml.loader.ScannerError:
-                    # We have to protect from invalid ticket data in the repository
-                    filerevid = filectxt.filerev() - 1
-                    if filerevid < 0:
-                        break
-                    filectxt = filectxt.filectx(filerevid)
-
-                issue[-1]['diff'] = issuediff(newrev, oldrev)
-                issue.append({'data': newrev,
-                              'user': filectxt.user(),
-                              'date': util.datestr(filectxt.date()),
-                              'files': filectxt.files(),
-                              'node': _hex_node(filectxt.node())})
+                newrev = yaml.safe_load(filectxt.data())
+            except yaml.loader.ScannerError:
+                # We have to protect from invalid ticket data in the repository
                 filerevid = filectxt.filerev() - 1
                 if filerevid < 0:
                     break
                 filectxt = filectxt.filectx(filerevid)
-                oldrev = newrev
-        except IOError:
-            # Not all listed repositories have an issue tracking database, nor
-            # do they contain this particular issue.  This needs to be changed
-            # to specify the repo specifically
-            pass
+
+            issue[-1]['diff'] = issuediff(newrev, oldrev)
+            issue.append({'data': newrev,
+                          'user': filectxt.user(),
+                          'date': util.datestr(filectxt.date()),
+                          'files': filectxt.files(),
+                          'node': _hex_node(filectxt.node())})
+            filerevid = filectxt.filerev() - 1
+            if filerevid < 0:
+                break
+            filectxt = filectxt.filectx(filerevid)
+            oldrev = newrev
+    except IOError:
+        # Not all listed repositories have an issue tracking database, nor
+        # do they contain this particular issue.  This needs to be changed
+        # to specify the repo specifically
+        return
 
     return issue
 

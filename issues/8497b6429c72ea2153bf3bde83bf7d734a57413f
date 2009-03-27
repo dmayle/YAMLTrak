@@ -1,0 +1,6 @@
+title: Editing the tickets
+comment: Fixing passing of parameters
+description: Add the ability to edit the tickets
+estimate: 1 Hour
+priority: green, red, or black
+status: closed

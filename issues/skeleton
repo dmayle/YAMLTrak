@@ -1,12 +1,6 @@
-skeleton:
-  comment: The current comment on this ticket.
-  component: A component of the project affected by this ticket
-  description: A detailed description of this ticket.
-  status: The current status of the ticket.
-  estimate: A time estimate for completion
-  keywords: Any keywords covered by this ticket
-  milestone: The development milestone that this ticket is attached to.
-  owner: The person currently responsible for this ticket
-  priority: The ticket priority
-  severity: The severity of this project
-  title: A title for the ticket
+comment: The current comment on this ticket.
+description: A detailed description of this ticket.
+status: The current status of the ticket.
+estimate: A time estimate for completion
+priority: green, red, or black
+title: A title for the ticket

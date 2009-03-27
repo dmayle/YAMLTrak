@@ -25,6 +25,10 @@
   estimate: 1 day
   status: open
   title: Set up system for hash based ticket numbers
+8497b6429c72ea2153bf3bde83bf7d734a57413f:
+  description: Add the ability to edit the tickets
+  estimate: 1 Hour
+  status: closed
 87c3dc730817:
   description: Write full documentation for using the software.  This includes theming
     tutorials.
