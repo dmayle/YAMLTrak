@@ -30,6 +30,8 @@ def issues(repositories=[], dbfolder='issues', status=['open']):
                     scale = 'medium'
                 else:
                     scale = 'long'
+            except IndexError:
+                scale = 'unplanned'
             except AttributeError:
                 scale = 'unplanned'
 
