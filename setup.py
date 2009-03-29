@@ -3,7 +3,7 @@ import sys, os
 
 version = '0.1'
 
-setup(name='YAMLTrac',
+setup(name='YAMLTrak',
       version=version,
       description="Bug tracker that uses versioned YAML for storage",
       long_description="""\

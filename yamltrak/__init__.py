@@ -6,7 +6,7 @@ from __future__ import with_statement
 import yaml
 from mercurial import hg, commands, ui, util
 from os import path
-NEW_TICKET_TAG='YAMLTrac-new-ticket'
+NEW_TICKET_TAG='YAMLTrak-new-ticket'
 
 def issues(repositories=[], dbfolder='issues', status=['open']):
     """Return the list of issues with the given statuses in dictionary form"""

@@ -34,7 +34,7 @@
   status: closed
   title: Add visuals to show the state of the repository.
 81c01c88a038:
-  description: 'Set the tag ''YAMLTrac-new-ticket'' with a commit message of ''TICKET:
+  description: 'Set the tag ''YAMLTrak-new-ticket'' with a commit message of ''TICKET:
     Ticket title'' and use the commit version as the ticket number.'
   estimate: 1 day
   status: closed
