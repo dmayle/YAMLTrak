@@ -23,5 +23,7 @@ setup(name='YAMLTrak',
       ],
       entry_points="""
       # -*- Entry points: -*-
+        [console_scripts]
+        yt=yamltrak.commands:main
       """,
       )

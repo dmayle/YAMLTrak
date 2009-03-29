@@ -1,4 +1,4 @@
-comment: Opening ticket
+comment: Get started with a hello world command
 description: Create a command line interface, maybe with urwid
 estimate: 1 week
 priority: green, red, or black
