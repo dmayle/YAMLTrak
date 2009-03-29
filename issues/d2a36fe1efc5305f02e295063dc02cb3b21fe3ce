@@ -1,0 +1,6 @@
+comment: Opening ticket
+description: Create a command line interface, maybe with urwid
+estimate: 1 week
+priority: green, red, or black
+status: open
+title: Make a command line interface
