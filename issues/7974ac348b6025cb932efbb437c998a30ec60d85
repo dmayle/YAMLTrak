@@ -1,0 +1,5 @@
+comment: Opening ticket
+description: Create a skeleton ticket, and an index file with a ticket skeleton
+estimate: 3 hours
+status: open
+title: Add database initialization

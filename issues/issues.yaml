@@ -33,6 +33,12 @@
   estimate: 3 days
   status: closed
   title: Add visuals to show the state of the repository.
+7974ac348b6025cb932efbb437c998a30ec60d85:
+  comment: Opening ticket
+  description: Create a skeleton ticket, and an index file with a ticket skeleton
+  estimate: 3 hours
+  status: open
+  title: Add database initialization
 81c01c88a038:
   description: 'Set the tag ''YAMLTrak-new-ticket'' with a commit message of ''TICKET:
     Ticket title'' and use the commit version as the ticket number.'
