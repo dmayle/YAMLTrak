@@ -65,10 +65,9 @@
   status: closed
   title: Work in my repo
 bd0fe6c135b663d347cafd7a8e22e99b90c8550d:
-  comment: Opening ticket
   description: Rename this package so that there's no confusion with trac
   estimate: 1 hour
-  status: open
+  status: closed
   title: Make this YAMLTrak
 d2a36fe1efc5305f02e295063dc02cb3b21fe3ce:
   description: Create a command line interface, maybe with urwid

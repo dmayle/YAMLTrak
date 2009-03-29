@@ -1,6 +1,6 @@
 Metadata-Version: 1.0
 Name: YAMLTrak
-Version: 0.1dev
+Version: 0.1
 Summary: Bug tracker that uses versioned YAML for storage
 Home-page: http://douglas.mayle.org
 Author: Douglas Mayle
