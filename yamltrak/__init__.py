@@ -155,7 +155,12 @@ def _hex_node(node_binary):
     """Convert a binary node string into a 40-digit hex string"""
     return ''.join('%0.2x' % ord(letter) for letter in node_binary)
 
+def main(*args):
+    import pdb; pdb.set_trace()
+    return main
+
 def add(repository, issue, dbfolder='issues', status=['open']):
+    """Add an issue to the database"""
     if 'status' not in issue:
         issue['status'] = 'open'
     if 'comment' not in issue:
@@ -180,6 +185,9 @@ def add(repository, issue, dbfolder='issues', status=['open']):
             indexfile.write(yaml.safe_dump(issues, default_flow_style=False))
     except IOError:
         return false
+
+def init(repository, dbfolder='issues'):
+    pass
 
 def close(repository, id, dbfolder='issues'):
     """Sets the status of the issue on disk to close, both in it's file, and the index."""

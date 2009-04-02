@@ -1,9 +1,19 @@
-def hw():
-    print 'Hello world adding ticket'
-
+import yamltrak
 
 def main():
-    hw()
+    """Parse the command line options and react to them."""
+    from optparse import OptionParser
 
-if __file__ == '__main__':
+    actions = {'add': yamltrak.add, 'close': yamltrak.close}
+    #def add(repository, issue, dbfolder='issues', status=['open']):
+
+    parser = OptionParser()
+    for key, value in actions.iteritems():
+        parser.add_option('-'+key[0], '--'+key, action="callback",
+                          help=value.__doc__, callback=value)
+
+    options, arguments = parser.parse_args() 
+
+
+if __name__ == '__main__':
     main()
