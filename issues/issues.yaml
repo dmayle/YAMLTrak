@@ -85,7 +85,9 @@ bd1c5eaa87a31bcdf9b210f189322deab6e3e72d:
   status: open
   title: Add support for finding issues related to a file
 d2a36fe1efc5305f02e295063dc02cb3b21fe3ce:
-  description: Create a command line interface, maybe with urwid
+  description: Create a command line interface, maybe with urwid, in two parts.  The
+    yt command is standalone and offers a complete interface.  Also create an hg extension
+    that can do things like blocking commit if you haven't updated a ticket...
   estimate: 1 week
   status: open
   title: Make a command line interface
