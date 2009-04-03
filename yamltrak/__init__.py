@@ -151,6 +151,37 @@ def issue(repository=None, dbfolder='issues', id=None, detail=True):
 
     return issue
 
+def relatedissues(repository=None, dbfolder='issues', filename=None, ids=None):
+    # Use revision to walk backwards intelligently.
+    # Change this to only accept one repository and to return a history
+    issues = []
+    myui = ui.ui()
+    repo = hg.repository(myui, repository)
+
+    for id in ids:
+        try:
+            filectxt = repo['tip'][path.join(dbfolder, id)]
+        except LookupError:
+            # This issue hasn't been committed yet
+            continue
+        filerevid = filectxt.filerev()
+
+        # By default, we're working with the context of tip.  Update to the
+        # context from the latest revision.
+        filectxt = filectxt.filectx(filerevid)
+
+        while True:
+            if filename in filectxt.files():
+                issues.append(id)
+                break
+
+            filerevid = filectxt.filerev() - 1
+            if filerevid < 0:
+                break
+            filectxt = filectxt.filectx(filerevid)
+
+    return issues
+
 def _hex_node(node_binary):
     """Convert a binary node string into a 40-digit hex string"""
     return ''.join('%0.2x' % ord(letter) for letter in node_binary)
