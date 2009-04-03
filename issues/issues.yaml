@@ -45,6 +45,12 @@
   estimate: 1 day
   status: closed
   title: Set up system for hash based ticket numbers
+828c269ffd250ea56e6d42b532b190517763a63f:
+  description: Since we don't have the id, we have no way to find the newly added
+    issue
+  estimate: 5 minutes
+  status: closed
+  title: Adding an issue does not return the id
 8497b6429c72ea2153bf3bde83bf7d734a57413f:
   description: Add the ability to edit the tickets
   estimate: 1 Hour

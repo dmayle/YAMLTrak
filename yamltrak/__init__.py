@@ -214,6 +214,7 @@ def add(repository, issue, dbfolder='issues', status=['open']):
         with open(path.join(repository, dbfolder, 'issues.yaml'), 'w') as indexfile:
             issues[ticketid] = issue
             indexfile.write(yaml.safe_dump(issues, default_flow_style=False))
+        return ticketid
     except IOError:
         return false
 

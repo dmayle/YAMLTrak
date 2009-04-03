@@ -1,0 +1,5 @@
+comment: Opening ticket
+description: Since we don't have the id, we have no way to find the newly added issue
+estimate: 5 minutes
+status: closed
+title: Adding an issue does not return the id
