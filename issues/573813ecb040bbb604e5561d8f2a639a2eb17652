@@ -1,6 +1,6 @@
 comment: This could be visually distracting
 description: Add a revert button and maybe a Preview background to uncommitted tickets
-estimate: 1 minute
+estimate: 1 hour
 priority: green, red, or black
 status: open
 title: Better UI/Controls for new uncommitted tickets
