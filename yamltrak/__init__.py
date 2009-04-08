@@ -6,6 +6,7 @@ from __future__ import with_statement
 import yaml
 from mercurial import hg, commands, ui, util
 from os import path
+from time import time
 NEW_TICKET_TAG='YAMLTrak-new-ticket'
 
 def issues(repositories=[], dbfolder='issues', status=['open']):
@@ -292,7 +293,7 @@ def _group_estimate(issues, groupname):
     hours = 0
     minutes = 0
     for issueid, issue in issues.iteritems():
-        if issue.get('group') != groupname:
+        if issue.get('group', 'unfiled') != groupname:
             continue
         if 'open' not in issue.get('status','').lower():
             continue
@@ -311,6 +312,8 @@ def _group_estimate(issues, groupname):
             else:
                 # We don't currently handle amounts larger than weeks.
                 continue
+        except ValueError:
+            continue
         except IndexError:
             continue
         except AttributeError:
@@ -326,7 +329,7 @@ def burndown(repository, groupname, dbfolder='issues'):
         estimate = _group_estimate(issues, groupname)
         if estimate > 0:
             found = True
-        checkpoints.append(['now', estimate])
+        checkpoints.append([time()*1000, estimate])
         myui = ui.ui()
         repo = hg.repository(myui, repository)
         try:
@@ -358,7 +361,7 @@ def burndown(repository, groupname, dbfolder='issues'):
                 # We had good data, and now it's disappeared, we have no need
                 # to keep going back.
                 return checkpoints
-            checkpoints.append(['now', estimate])
+            checkpoints.append([filectxt.date()[0]*1000, estimate])
 
             filerevid = filectxt.filerev() - 1
             if filerevid < 0:
