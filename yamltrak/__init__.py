@@ -39,8 +39,8 @@ def issues(repositories=[], dbfolder='issues', status=['open']):
                 priority = issue['priority'].lower()
                 if 'high' in priority:
                     priority = 'high'
-                elif 'medium' in priority:
-                    priority = 'medium'
+                elif 'normal' in priority:
+                    priority = 'normal'
                 elif 'low' in priority:
                     priority = 'low'
                 else:
