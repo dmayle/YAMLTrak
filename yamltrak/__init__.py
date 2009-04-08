@@ -34,8 +34,27 @@ def issues(repositories=[], dbfolder='issues', status=['open']):
                 scale = 'unplanned'
             except AttributeError:
                 scale = 'unplanned'
+            try:
+                priority = issue['priority'].lower()
+                if 'high' in priority:
+                    priority = 'high'
+                elif 'medium' in priority:
+                    priority = 'medium'
+                elif 'low' in priority:
+                    priority = 'low'
+                else:
+                    # Don't want any slipping through the cracks.
+                    priority = 'high'
+
+            except KeyError:
+                priority = 'high'
+            except IndexError:
+                priority = 'high'
+            except AttributeError:
+                priority = 'high'
 
             issue['estimate'] = {'scale':scale, 'text':issue['estimate']}
+            issue['priority'] = priority
     return issues
 
 def issuediff(revx, revy):
