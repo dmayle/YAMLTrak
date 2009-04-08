@@ -150,6 +150,7 @@ def issue(repository=None, dbfolder='issues', id=None, detail=True):
                 if filerevid < 0:
                     break
                 filectxt = filectxt.filectx(filerevid)
+                continue
 
             issue[-1]['diff'] = issuediff(newrev, oldrev)
             issue.append({'data': newrev,
@@ -286,3 +287,87 @@ def purge(repository, ticketid, dbfolder='issues', status=['open']):
             indexfile.write(yaml.safe_dump(issues, default_flow_style=False))
     except IOError:
         return false
+
+def _group_estimate(issues, groupname):
+    hours = 0
+    minutes = 0
+    for issueid, issue in issues.iteritems():
+        if issue.get('group') != groupname:
+            continue
+        if 'open' not in issue.get('status','').lower():
+            continue
+        estimate = issue.get('estimate', '')
+        try:
+            timeamount, timescale = estimate.split()[:2]
+            timescale = timescale.lower().rstrip('s')
+            if timescale == 'minute':
+                minutes += int(timeamount)
+            elif timescale == 'hour':
+                hours += int(timeamount)
+            elif timescale == 'day':
+                hours += 24 * int(timeamount)
+            elif timescale == 'week':
+                hours += 7 * 24 * int(timeamount)
+            else:
+                # We don't currently handle amounts larger than weeks.
+                continue
+        except IndexError:
+            continue
+        except AttributeError:
+            continue
+    return hours + (minutes // 60)
+
+def burndown(repository, groupname, dbfolder='issues'):
+    checkpoints = []
+    found = False
+    try:
+        with open(path.join(repository, dbfolder, 'issues.yaml')) as indexfile:
+            issues = yaml.load(indexfile.read())
+        estimate = _group_estimate(issues, groupname)
+        if estimate > 0:
+            found = True
+        checkpoints.append(['now', estimate])
+        myui = ui.ui()
+        repo = hg.repository(myui, repository)
+        try:
+            filectxt = repo['tip'][path.join(dbfolder, 'issues.yaml')]
+        except LookupError:
+            # The index hasn't been committed yet
+            return checkpoints
+        filerevid = filectxt.filerev()
+
+        # By default, we're working with the context of tip.  Update to the
+        # context from the latest revision.
+        filectxt = filectxt.filectx(filerevid)
+
+        while True:
+            try:
+                issues = yaml.safe_load(filectxt.data())
+            except yaml.loader.ScannerError:
+                # We have to protect from invalid ticket data in the repository
+                filerevid = filectxt.filerev() - 1
+                if filerevid < 0:
+                    break
+                filectxt = filectxt.filectx(filerevid)
+                continue
+
+            estimate = _group_estimate(issues, groupname)
+            if estimate > 0:
+                found = True
+            elif found:
+                # We had good data, and now it's disappeared, we have no need
+                # to keep going back.
+                return checkpoints
+            checkpoints.append(['now', estimate])
+
+            filerevid = filectxt.filerev() - 1
+            if filerevid < 0:
+                break
+            filectxt = filectxt.filectx(filerevid)
+    except IOError:
+        # Not all listed repositories have an issue tracking database, nor
+        # do they contain this particular issue.  This needs to be changed
+        # to specify the repo specifically
+        return []
+
+    return checkpoints
