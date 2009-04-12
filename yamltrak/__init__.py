@@ -5,7 +5,7 @@
 from __future__ import with_statement
 import yaml
 from mercurial import hg, commands, ui, util
-from os import path
+from os import path, makedirs
 from time import time
 NEW_TICKET_TAG='YAMLTrak-new-ticket'
 
@@ -240,7 +240,40 @@ def add(repository, issue, dbfolder='issues', status=['open']):
         return false
 
 def init(repository, dbfolder='issues'):
-    pass
+    try:
+        makedirs(path.join(repository, dbfolder))
+    except OSError:
+        pass
+    SKELETON = {
+        'title': 'A title for the ticket',
+        'description': 'A detailed description of this ticket.',
+        'estimate': 'A time estimate for completion',
+        'status': 'open, closed',
+        'group': 'unfiled',
+        'priority': 'high, normal, low',
+        'comment': 'The current comment on this ticket.'}
+    NEWTICKET = {
+        'title': 'A title for the ticket',
+        'description': 'A detailed description of this ticket.',
+        'estimate': 'A time estimate for completion'}
+    INDEX = {'skeleton': {
+        'title': 'A title for the ticket',
+        'description': 'A detailed description of this ticket.',
+        'estimate': 'A time estimate for completion',
+        'status': 'open, closed',
+        'group': 'unfiled',
+        'priority': 'high, normal, low'}}
+    with open(path.join(repository, dbfolder, 'skeleton'), 'w') as skeletonfile:
+        skeletonfile.write(yaml.dump(SKELETON, default_flow_style=False))
+    with open(path.join(repository, dbfolder, 'newticket'), 'w') as skeletonfile:
+        skeletonfile.write(yaml.dump(NEWTICKET, default_flow_style=False))
+    with open(path.join(repository, dbfolder, 'issues.yaml'), 'w') as skeletonfile:
+        skeletonfile.write(yaml.dump(INDEX, default_flow_style=False))
+    myui = ui.ui()
+    repo = hg.repository(myui, repository)
+    commands.add(myui, repo, path.join(repository, dbfolder, 'skeleton'))
+    commands.add(myui, repo, path.join(repository, dbfolder, 'newticket'))
+    commands.add(myui, repo, path.join(repository, dbfolder, 'issues.yaml'))
 
 def close(repository, id, dbfolder='issues'):
     """Sets the status of the issue on disk to close, both in it's file, and the index."""
