@@ -1,5 +1,6 @@
-comment: Opening ticket
+comment: Already fixed in a previous commit.
 description: Create a skeleton ticket, and an index file with a ticket skeleton
 estimate: 3 hours
-status: open
+priority: green, red, or black
+status: closed
 title: Add database initialization
