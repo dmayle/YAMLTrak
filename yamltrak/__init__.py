@@ -207,10 +207,6 @@ def _hex_node(node_binary):
     """Convert a binary node string into a 40-digit hex string"""
     return ''.join('%0.2x' % ord(letter) for letter in node_binary)
 
-def main(*args):
-    import pdb; pdb.set_trace()
-    return main
-
 def add(repository, issue, dbfolder='issues', status=['open']):
     """Add an issue to the database"""
     if 'status' not in issue:
