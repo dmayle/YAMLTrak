@@ -1,4 +1,4 @@
-comment: Added support for the edit command
+comment: Added support for the add command
 description: Create a command line interface, maybe with urwid, in two parts.  The
   yt command is standalone and offers a complete interface.  Also create an hg extension
   that can do things like blocking commit if you haven't updated a ticket...

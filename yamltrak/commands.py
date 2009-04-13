@@ -4,14 +4,19 @@ import os
 from argparse import ArgumentParser
 
 def unpack_add(args):
-    pass
+    skeleton = yamltrak.issue(os.getcwd(), 'issues', id='skeleton', detail=False)[0]['data']
+    issue = {}
+    for field in skeleton:
+        issue[field] = getattr(args, field, None) or skeleton[field]
+    newid = yamltrak.add(os.getcwd(), issue=issue)
+    print 'Added ticket: %s' % newid
 
 def unpack_list(args):
     allissues = yamltrak.issues([os.getcwd()], status=args.status)
     for issuedb in allissues.itervalues():
         for id, issue in issuedb.iteritems():
             print 'Issue: %s' % id
-            print textwrap.fill(issue.get('title').upper(),
+            print textwrap.fill(issue.get('title', '').upper(),
                 initial_indent='    ', subsequent_indent='    ')
             print textwrap.fill(issue.get('description'),
                 initial_indent='    ', subsequent_indent='    ')
@@ -33,7 +38,7 @@ def unpack_show(args):
     issue = issuedata[0]['data']
     print '\nIssue: %s' % args.id
     if 'title' in issue:
-        print textwrap.fill(issue['title'].upper(), initial_indent='', subsequent_indent='')
+        print textwrap.fill(issue.get('title', '').upper(), initial_indent='', subsequent_indent='')
     if 'description' in issue:
         print textwrap.fill(issue['description'], initial_indent='', subsequent_indent='')
     print ''
