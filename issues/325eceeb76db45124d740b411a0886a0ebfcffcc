@@ -1,0 +1,7 @@
+comment: Dont forget to change the groups when the project tab is changed.
+description: A detailed description of this ticket.
+estimate: 1 Day
+priority: high
+status: open
+title: In large ticket databases, dragging is impractical, we need the groups to show
+  up as tools

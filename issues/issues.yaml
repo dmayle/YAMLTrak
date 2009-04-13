@@ -15,6 +15,12 @@
   estimate: 1 Day
   status: closed
   title: Add support for editing an issue
+325eceeb76db45124d740b411a0886a0ebfcffcc:
+  description: A detailed description of this ticket.
+  estimate: 1 Day
+  status: open
+  title: In large ticket databases, dragging is impractical, we need the groups to
+    show up as tools
 3b6a7f2f8c23b4713840dca97f5c544ee9458439:
   description: Make sure the index includes all repositories, and the links to each
     ticket go to the correct repository
