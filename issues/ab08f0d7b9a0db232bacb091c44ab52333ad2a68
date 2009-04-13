@@ -1,0 +1,6 @@
+comment: The current comment on this ticket.
+description: Status should be in field, not equal to field
+estimate: 1 Hour
+priority: high
+status: open
+title: Status must be exactly open or ticket does not make list
