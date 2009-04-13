@@ -22,7 +22,7 @@ def unpack_edit(args):
     issue = yamltrak.issue(os.getcwd(), 'issues', id=args.id, detail=False)[0]['data']
     newissue = {}
     for field in skeleton:
-        newissue[field] = getattr(args, field) or issue.get(field, skeleton[field])
+        newissue[field] = getattr(args, field, None) or issue.get(field, skeleton[field])
     yamltrak.edit_issue(os.getcwd(), id=args.id, issue=newissue)
 
 def unpack_show(args):
