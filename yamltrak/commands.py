@@ -18,7 +18,12 @@ def unpack_list(args):
             print ''
 
 def unpack_edit(args):
-    pass
+    skeleton = yamltrak.issue(os.getcwd(), 'issues', id='skeleton', detail=False)[0]['data']
+    issue = yamltrak.issue(os.getcwd(), 'issues', id=args.id, detail=False)[0]['data']
+    newissue = {}
+    for field in skeleton:
+        newissue[field] = getattr(args, field) or issue.get(field, skeleton[field])
+    yamltrak.edit_issue(os.getcwd(), id=args.id, issue=newissue)
 
 def unpack_show(args):
     issuedata = yamltrak.issue(os.getcwd(), id=args.id, detail=args.detail)
@@ -120,6 +125,7 @@ def main():
     parser_edit.set_defaults(func=unpack_edit)
     for field, help in skeleton.iteritems():
         parser_edit.add_argument('-' + field[0], '--' + field, help=help)
+    parser_edit.add_argument('id', help='The issue id to edit.')
 
     # List all issues
     parser_list = subparsers.add_parser('list', help="List all issues.")
