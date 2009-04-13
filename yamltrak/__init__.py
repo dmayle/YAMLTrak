@@ -9,13 +9,13 @@ from os import path, makedirs
 from time import time
 NEW_TICKET_TAG='YAMLTrak-new-ticket'
 
-def issues(repositories=[], dbfolder='issues', status=['open']):
+def issues(repositories=[], dbfolder='issues', status='open'):
     """Return the list of issues with the given statuses in dictionary form"""
     issues = {}
     for repo in repositories:
         try:
             with open(path.join(repo, dbfolder, 'issues.yaml')) as indexfile:
-                issues[path.basename(repo)] = dict(issue for issue in yaml.load(indexfile.read()).iteritems() if issue[0] != 'skeleton' and status[0] in issue[1].get('status', '').lower())
+                issues[path.basename(repo)] = dict(issue for issue in yaml.load(indexfile.read()).iteritems() if issue[0] != 'skeleton' and status in issue[1].get('status', '').lower())
         except IOError:
             # Not all listed repositories have an issue tracking database
             pass

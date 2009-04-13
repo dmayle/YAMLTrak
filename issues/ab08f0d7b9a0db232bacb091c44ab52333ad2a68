@@ -1,4 +1,4 @@
-comment: Only one line had the bad check
+comment: Fixed default argument
 description: Status should be in field, not equal to field
 estimate: 1 Hour
 priority: high
