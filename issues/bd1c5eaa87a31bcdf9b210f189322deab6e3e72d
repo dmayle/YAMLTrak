@@ -1,8 +1,9 @@
-comment: Opening ticket
+comment: Already fixed, gotta get better about this...
 description: To make for a better workflow, at commit time, it would be useful to
   have a list of tickets already related to the current file.   Maybe it would be
   good to include all uncommitted tickets in this list, as they are likely to be associated
   with the file as well.
 estimate: 1 Day
-status: open
+priority: green, red, or black
+status: closed
 title: Add support for finding issues related to a file

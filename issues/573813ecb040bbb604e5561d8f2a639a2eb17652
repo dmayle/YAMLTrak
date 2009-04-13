@@ -1,6 +1,6 @@
-comment: This could be visually distracting
+comment: Bad ticket copied over from DVDev
 description: Add a revert button and maybe a Preview background to uncommitted tickets
 estimate: 1 hour
 priority: green, red, or black
-status: open
+status: closed
 title: Better UI/Controls for new uncommitted tickets

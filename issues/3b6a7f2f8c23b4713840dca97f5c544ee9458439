@@ -1,6 +1,7 @@
-comment: Opening ticket
+comment: Pretty sure this just got copied over from DVDev...
 description: Make sure the index includes all repositories, and the links to each
   ticket go to the correct repository
 estimate: 2 Hours
-status: open
+priority: green, red, or black
+status: closed
 title: Do a better job of indexing and linking to multiple repositories

@@ -16,16 +16,15 @@
   status: closed
   title: Add support for editing an issue
 3b6a7f2f8c23b4713840dca97f5c544ee9458439:
-  comment: Opening ticket
   description: Make sure the index includes all repositories, and the links to each
     ticket go to the correct repository
   estimate: 2 Hours
-  status: open
+  status: closed
   title: Do a better job of indexing and linking to multiple repositories
 573813ecb040bbb604e5561d8f2a639a2eb17652:
   description: Add a revert button and maybe a Preview background to uncommitted tickets
   estimate: 1 hour
-  status: open
+  status: closed
   title: Better UI/Controls for new uncommitted tickets
 5bd91eb17ec4:
   description: Set up a PREVIEW background if there are uncommitted files.  Enable
@@ -81,13 +80,12 @@ bd0fe6c135b663d347cafd7a8e22e99b90c8550d:
   status: closed
   title: Make this YAMLTrak
 bd1c5eaa87a31bcdf9b210f189322deab6e3e72d:
-  comment: Opening ticket
   description: To make for a better workflow, at commit time, it would be useful to
     have a list of tickets already related to the current file.   Maybe it would be
     good to include all uncommitted tickets in this list, as they are likely to be
     associated with the file as well.
   estimate: 1 Day
-  status: open
+  status: closed
   title: Add support for finding issues related to a file
 d2a36fe1efc5305f02e295063dc02cb3b21fe3ce:
   description: Create a command line interface, maybe with urwid, in two parts.  The
