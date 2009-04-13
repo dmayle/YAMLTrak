@@ -32,6 +32,11 @@
   estimate: 3 days
   status: closed
   title: Add visuals to show the state of the repository.
+5d3d9d4f47117bcc7f39085bdc653ab6f75d2b10:
+  description: Empty estimates cause yamltrak to break, which is not good.
+  estimate: 1 Hour
+  status: open
+  title: Allow empty estimates
 7974ac348b6025cb932efbb437c998a30ec60d85:
   description: Create a skeleton ticket, and an index file with a ticket skeleton
   estimate: 3 hours
