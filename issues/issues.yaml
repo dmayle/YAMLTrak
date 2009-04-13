@@ -86,11 +86,9 @@
   status: closed
   title: Work in my repo
 ab08f0d7b9a0db232bacb091c44ab52333ad2a68:
-  comment: The current comment on this ticket.
   description: Status should be in field, not equal to field
   estimate: 1 Hour
-  priority: high
-  status: open
+  status: closed
   title: Status must be exactly open or ticket does not make list
 bd0fe6c135b663d347cafd7a8e22e99b90c8550d:
   description: Rename this package so that there's no confusion with trac

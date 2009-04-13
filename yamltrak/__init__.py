@@ -4,7 +4,7 @@
 # stored in the issue file when updating the index.
 from __future__ import with_statement
 import yaml
-from mercurial import hg, commands, ui, util
+from mercurial import hg, commands as hgcommands, ui, util
 from os import path, makedirs
 from time import time
 NEW_TICKET_TAG='YAMLTrak-new-ticket'
@@ -15,7 +15,7 @@ def issues(repositories=[], dbfolder='issues', status=['open']):
     for repo in repositories:
         try:
             with open(path.join(repo, dbfolder, 'issues.yaml')) as indexfile:
-                issues[path.basename(repo)] = dict(issue for issue in yaml.load(indexfile.read()).iteritems() if issue[0] != 'skeleton' and issue[1].get('status', 'open') == 'open')
+                issues[path.basename(repo)] = dict(issue for issue in yaml.load(indexfile.read()).iteritems() if issue[0] != 'skeleton' and status[0] in issue[1].get('status', '').lower())
         except IOError:
             # Not all listed repositories have an issue tracking database
             pass
@@ -216,13 +216,13 @@ def add(repository, issue, dbfolder='issues', status=['open']):
     myui = ui.ui()
     repo = hg.repository(myui, repository)
     # This can fail in an empty repository.  Handle this
-    commands.tag(myui, repo, NEW_TICKET_TAG, force=True, message='TICKETPREP: %s' % issue['title'])
+    hgcommands.tag(myui, repo, NEW_TICKET_TAG, force=True, message='TICKETPREP: %s' % issue['title'])
     context = repo['tip']
     ticketid = _hex_node(context.node())
     try:
         with open(path.join(repository, dbfolder, ticketid), 'w') as issuefile:
             issuefile.write(yaml.safe_dump(issue, default_flow_style=False))
-        commands.add(myui, repo, path.join(repository, dbfolder, ticketid))
+        hgcommands.add(myui, repo, path.join(repository, dbfolder, ticketid))
     except IOError:
         return false
     try:
@@ -267,9 +267,9 @@ def init(repository, dbfolder='issues'):
         skeletonfile.write(yaml.dump(INDEX, default_flow_style=False))
     myui = ui.ui()
     repo = hg.repository(myui, repository)
-    commands.add(myui, repo, path.join(repository, dbfolder, 'skeleton'))
-    commands.add(myui, repo, path.join(repository, dbfolder, 'newticket'))
-    commands.add(myui, repo, path.join(repository, dbfolder, 'issues.yaml'))
+    hgcommands.add(myui, repo, path.join(repository, dbfolder, 'skeleton'))
+    hgcommands.add(myui, repo, path.join(repository, dbfolder, 'newticket'))
+    hgcommands.add(myui, repo, path.join(repository, dbfolder, 'issues.yaml'))
 
 def close(repository, id, dbfolder='issues'):
     """Sets the status of the issue on disk to close, both in it's file, and the index."""
@@ -308,7 +308,7 @@ def purge(repository, ticketid, dbfolder='issues', status=['open']):
     return True
     myui = ui.ui()
     repo = hg.repository(myui, repository)
-    commands.remove(myui, repo, path.join(repository, dbfolder, ticketid))
+    hgcommands.remove(myui, repo, path.join(repository, dbfolder, ticketid))
     try:
         with open(path.join(repository, dbfolder, 'issues.yaml'), 'r') as indexfile:
             issues = yaml.load(indexfile.read())
