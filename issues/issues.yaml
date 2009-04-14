@@ -80,7 +80,9 @@
   description: Write full documentation for using the software.  This includes theming
     tutorials.
   estimate: 4 weeks
-  status: open
+  group: unfiled
+  priority: normal
+  status: The current status of the ticket.
   title: Write good documentation.
 92adaac122607474a3c5f2e047c592e55feb962:
   description: Add the closing option so that a ticket can be fixed and stick around
@@ -125,7 +127,7 @@ d2a36fe1efc5305f02e295063dc02cb3b21fe3ce:
 e50ae42a8ba3:
   description: Issue tracking using a versioned database would represent an entirely
     new paradigm in issue management.
-  estimate: null
+  estimate: ''
   status: open
   title: Prototype an entirely new style of issue tracking that uses versioned documents
     for a ticket database.

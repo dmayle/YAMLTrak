@@ -1,3 +1,8 @@
-title: Write good documentation.
-description: Write full documentation for using the software.  This includes theming tutorials.
+comment: The current comment on this ticket.
+description: Write full documentation for using the software.  This includes theming
+  tutorials.
 estimate: 4 weeks
+group: unfiled
+priority: normal
+status: The current status of the ticket.
+title: Write good documentation.
