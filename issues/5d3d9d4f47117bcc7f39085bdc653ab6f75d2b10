@@ -1,7 +1,7 @@
-comment: Fixed in an argparse patch.  Hopefully it will get accepted and there will
-  be a release soon.
+comment: Not our code, now.  We need to shephard argparse.
 description: Empty estimates cause yamltrak to break, which is not good.
 estimate: 1 Hour
-priority: high
-status: open
+group: unfiled
+priority: normal
+status: normal
 title: Allow empty estimates
