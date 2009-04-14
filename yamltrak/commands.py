@@ -99,6 +99,8 @@ def unpack_burndown(repository, args):
 
 def main():
     """Parse the command line options and react to them."""
+    # We need to attempt to initialize a repo, and if it works, use the repo
+    # root instead of 'here'
     here = os.getcwd()
     skeleton = yamltrak.issue(here, 'issues', 'skeleton', detail=False)
     newticket = yamltrak.issue(here, 'issues', 'newticket', detail=False)
@@ -176,13 +178,13 @@ def main():
         help='The issue id to close.')
 
     # Purge an issue
-    parser_purge = subparsers.add_parser('purge', help="Purge an issue.")
-    parser_purge.set_defaults(func=unpack_purge)
+    # parser_purge = subparsers.add_parser('purge', help="Purge an issue.")
+    # parser_purge.set_defaults(func=unpack_purge)
 
     # ASCII Burndown chart.
-    parser_burn = subparsers.add_parser('burn', help="Show a burndown chart "
-                                        "for a group of issues.")
-    parser_burn.set_defaults(func=unpack_burndown)
+    # parser_burn = subparsers.add_parser('burn', help="Show a burndown chart "
+    #                                     "for a group of issues.")
+    # parser_burn.set_defaults(func=unpack_burndown)
     args = parser.parse_args()
     args.func(here, args)
 
