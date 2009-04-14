@@ -96,11 +96,15 @@ def main():
     skeleton = yamltrak.issue(here, 'issues', 'skeleton', detail=False)
     newticket = yamltrak.issue(here, 'issues', 'newticket', detail=False)
     if not skeleton:
-        # If not run from inside a repository, we should just show the default
-        # options.
-        print 'yt must be run from inside a repository, but how do we init???'
-        import sys
-        sys.exit()
+        # If we're not in a repository, the only option we support is db init.
+        parser = ArgumentParser(prog='yt', description='YAMLTrak is a distributed version controlled issue tracker.')
+        subparsers = parser.add_subparsers(help=None, dest='command')
+        parser_init = subparsers.add_parser('init', help="Initialize issue "
+                                            "database.")
+        parser_init.set_defaults(func=unpack_init)
+        args = parser.parse_args()
+        args.func(here, args)
+        return
     skeleton = skeleton[0]['data']
     if newticket:
         newticket = newticket[0]['data']
