@@ -15,6 +15,16 @@
   estimate: 1 Day
   status: closed
   title: Add support for editing an issue
+2746c65b91face823331c36b7a6725aa2ad02fdf:
+  description: We should add a -r --related command line switch.  When a ticket id
+    is required, but not supplied, it looks up tickets related to the uncommitted
+    changeset.  If it finds only one, it uses that.  If there are multiple, it will
+    kick back with the list of related tickets.
+  estimate: 2 Hours
+  group: unfiled
+  priority: high
+  status: open
+  title: Command line guesses ticketid
 325eceeb76db45124d740b411a0886a0ebfcffcc:
   description: A detailed description of this ticket.
   estimate: 1 Day
@@ -127,6 +137,15 @@ e66bdaf483b9e84010f78c71829391f0847a9fe6:
   priority: high
   status: open
   title: Related feature should include uncommitted tickets
+e9a7d32c7c213b132b4620b620358e5f6e11b58a:
+  comment: The current comment on this ticket.
+  description: The command line views do not offer nearly as much information as the
+    DVDev web views.  If we could use color, that would help a lot.
+  estimate: 1 Day
+  group: unfiled
+  priority: high, normal, low
+  status: The current status of the ticket.
+  title: Use color in command line output
 f75cd69163ff8d3cf3a35a18db2af92e161551aa:
   description: The changes for a ticket version are attributed to the older version,
     rather than the newer for the changes.

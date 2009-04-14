@@ -1,0 +1,8 @@
+comment: The current comment on this ticket.
+description: The command line views do not offer nearly as much information as the
+  DVDev web views.  If we could use color, that would help a lot.
+estimate: 1 Day
+group: unfiled
+priority: high, normal, low
+status: The current status of the ticket.
+title: Use color in command line output

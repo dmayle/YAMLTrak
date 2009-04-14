@@ -1,0 +1,10 @@
+comment: -r other
+description: We should add a -r --related command line switch.  When a ticket id is
+  required, but not supplied, it looks up tickets related to the uncommitted changeset.  If
+  it finds only one, it uses that.  If there are multiple, it will kick back with
+  the list of related tickets.
+estimate: 2 Hours
+group: unfiled
+priority: high
+status: open
+title: Command line guesses ticketid
