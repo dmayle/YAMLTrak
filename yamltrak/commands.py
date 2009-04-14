@@ -82,6 +82,13 @@ def unpack_init(repository, args):
     print 'Initialized repository'
 
 def unpack_close(repository, args):
+    skeleton = yamltrak.issue(repository, 'issues', id='skeleton', detail=False)[0]['data']
+    issue = yamltrak.issue(repository, 'issues', id=args.id, detail=False)[0]['data']
+    newissue = {}
+    for field in skeleton:
+        newissue[field] = issue.get(field, skeleton[field])
+    newissue['status'] = 'closed'
+    yamltrak.edit_issue(repository, id=args.id, issue=newissue)
     pass
 
 def unpack_purge(repository, args):
@@ -165,6 +172,8 @@ def main():
     # Close an issue
     parser_close = subparsers.add_parser('close', help="Close an issue.")
     parser_close.set_defaults(func=unpack_close)
+    parser_close.add_argument('id',
+        help='The issue id to close.')
 
     # Purge an issue
     parser_purge = subparsers.add_parser('purge', help="Purge an issue.")
