@@ -1,0 +1,8 @@
+comment: The current comment on this ticket.
+description: Related is much less useful because it does not show the uncommitted
+  tickets (which would be related on checkin)
+estimate: 2 Hours
+group: unfiled
+priority: high
+status: open
+title: Related feature should include uncommitted tickets

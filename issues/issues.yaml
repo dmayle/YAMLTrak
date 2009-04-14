@@ -117,6 +117,14 @@ e50ae42a8ba3:
   status: open
   title: Prototype an entirely new style of issue tracking that uses versioned documents
     for a ticket database.
+e66bdaf483b9e84010f78c71829391f0847a9fe6:
+  description: Related is much less useful because it does not show the uncommitted
+    tickets (which would be related on checkin)
+  estimate: 2 Hours
+  group: unfiled
+  priority: high
+  status: open
+  title: Related feature should include uncommitted tickets
 f75cd69163ff8d3cf3a35a18db2af92e161551aa:
   description: The changes for a ticket version are attributed to the older version,
     rather than the newer for the changes.
