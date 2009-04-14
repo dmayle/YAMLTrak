@@ -3,16 +3,16 @@ import textwrap
 import os
 from argparse import ArgumentParser
 
-def unpack_add(args):
-    skeleton = yamltrak.issue(os.getcwd(), 'issues', id='skeleton', detail=False)[0]['data']
+def unpack_add(repository, args):
+    skeleton = yamltrak.issue(repository, 'issues', id='skeleton', detail=False)[0]['data']
     issue = {}
     for field in skeleton:
         issue[field] = getattr(args, field, None) or skeleton[field]
-    newid = yamltrak.add(os.getcwd(), issue=issue)
+    newid = yamltrak.add(repository, issue=issue)
     print 'Added ticket: %s' % newid
 
-def unpack_list(args):
-    allissues = yamltrak.issues([os.getcwd()], status=args.status)
+def unpack_list(repository, args):
+    allissues = yamltrak.issues([repository], status=args.status)
     for issuedb in allissues.itervalues():
         for id, issue in issuedb.iteritems():
             print 'Issue: %s' % id
@@ -22,16 +22,16 @@ def unpack_list(args):
                 initial_indent='    ', subsequent_indent='    ')
             print ''
 
-def unpack_edit(args):
-    skeleton = yamltrak.issue(os.getcwd(), 'issues', id='skeleton', detail=False)[0]['data']
-    issue = yamltrak.issue(os.getcwd(), 'issues', id=args.id, detail=False)[0]['data']
+def unpack_edit(repository, args):
+    skeleton = yamltrak.issue(repository, 'issues', id='skeleton', detail=False)[0]['data']
+    issue = yamltrak.issue(repository, 'issues', id=args.id, detail=False)[0]['data']
     newissue = {}
     for field in skeleton:
         newissue[field] = getattr(args, field, None) or issue.get(field, skeleton[field])
-    yamltrak.edit_issue(os.getcwd(), id=args.id, issue=newissue)
+    yamltrak.edit_issue(repository, id=args.id, issue=newissue)
 
-def unpack_show(args):
-    issuedata = yamltrak.issue(os.getcwd(), id=args.id, detail=args.detail)
+def unpack_show(repository, args):
+    issuedata = yamltrak.issue(repository, id=args.id, detail=args.detail)
     if not issuedata or not issuedata[0].get('data'):
         print 'No such ticket found'
         return
@@ -74,19 +74,20 @@ def unpack_show(args):
                 print 'Changed: %s - %s' % (changeset[0].upper(), changeset[1][1])
 
 
-def unpack_related(args):
+def unpack_related(repository, args):
     pass
 
-def unpack_init(args):
+def unpack_init(repository, args):
+    yamltrak.init(repository)
+    print 'Initialized repository'
+
+def unpack_close(repository, args):
     pass
 
-def unpack_close(args):
+def unpack_purge(repository, args):
     pass
 
-def unpack_purge(args):
-    pass
-
-def unpack_burndown(args):
+def unpack_burndown(repository, args):
     pass
 
 def main():
@@ -97,7 +98,7 @@ def main():
     if not skeleton:
         # If not run from inside a repository, we should just show the default
         # options.
-        print 'yt must be run from inside a repository'
+        print 'yt must be run from inside a repository, but how do we init???'
         import sys
         sys.exit()
     skeleton = skeleton[0]['data']
@@ -169,8 +170,8 @@ def main():
     parser_burn = subparsers.add_parser('burn', help="Show a burndown chart "
                                         "for a group of issues.")
     parser_burn.set_defaults(func=unpack_burndown)
-    args2 = parser.parse_args()
-    args2.func(args2)
+    args = parser.parse_args()
+    args.func(here, args)
 
 
 if __name__ == '__main__':
