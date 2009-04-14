@@ -20,6 +20,9 @@ setup(name='YAMLTrak',
       install_requires=[
           # -*- Extra requirements: -*-
           "PyYaml",
+          "argparse", # Once my issue is fixed, specify the version
+          "Mercurial>=1.2",
+    ],
       ],
       entry_points="""
       # -*- Entry points: -*-
