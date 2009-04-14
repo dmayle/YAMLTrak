@@ -126,5 +126,7 @@ f75cd69163ff8d3cf3a35a18db2af92e161551aa:
 skeleton:
   description: A detailed description of this ticket.
   estimate: A time estimate for completion
+  group: unfiled
+  priority: The ticket priority.
   status: The current status of the ticket.
   title: A title for the ticket
