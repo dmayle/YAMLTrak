@@ -1,5 +1,6 @@
 import yamltrak
 import textwrap
+from termcolor import colored
 import os
 from argparse import ArgumentParser
 
@@ -15,12 +16,34 @@ def unpack_list(repository, args):
     allissues = yamltrak.issues([repository], status=args.status)
     for issuedb in allissues.itervalues():
         for id, issue in issuedb.iteritems():
-            print 'Issue: %s' % id
-            print textwrap.fill(issue.get('title', '').upper(),
-                initial_indent='    ', subsequent_indent='    ')
-            print textwrap.fill(issue.get('description'),
-                initial_indent='    ', subsequent_indent='    ')
-            print ''
+            # Try to use color for clearer output
+            color = None
+            if 'high' in issue.get('priority',''):
+                color = 'red'
+            elif 'normal' in issue.get('priority',''):
+                pass
+            elif 'low' in issue.get('priority',''):
+                color = 'blue'
+            else:
+                color = 'red'
+
+            # We'll use status indicators on indent for estimate
+            if 'long' in issue.get('estimate', {}).get('scale').lower():
+                indent = '>>>>'
+            elif 'medium' in issue.get('estimate', {}).get('scale').lower():
+                indent = '> > '
+            elif 'short' in issue.get('estimate', {}).get('scale').lower():
+                indent = '>   '
+            else:
+                indent = '===='
+
+            print colored('Issue: %s' % id, color, attrs=['reverse'])
+            print colored(textwrap.fill(issue.get('title', '').upper(),
+                initial_indent=indent, subsequent_indent=indent), color, attrs=[])
+            print colored(textwrap.fill(issue.get('description'),
+                initial_indent=indent, subsequent_indent=indent), color)
+            print colored(textwrap.fill(issue.get('estimate',{}).get('text',''),
+                initial_indent=indent, subsequent_indent=indent), color)
 
 def unpack_edit(repository, args):
     skeleton = yamltrak.issue(repository, 'issues', id='skeleton', detail=False)[0]['data']

@@ -122,6 +122,8 @@ d2a36fe1efc5305f02e295063dc02cb3b21fe3ce:
     yt command is standalone and offers a complete interface.  Also create an hg extension
     that can do things like blocking commit if you haven't updated a ticket...
   estimate: 1 week
+  group: unfiled
+  priority: green, red, or black
   status: open
   title: Make a command line interface
 e50ae42a8ba3:
