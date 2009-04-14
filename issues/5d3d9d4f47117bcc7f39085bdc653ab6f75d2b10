@@ -1,4 +1,5 @@
-comment: Well, if nothing else, there is an error in argparse :-(
+comment: Fixed in an argparse patch.  Hopefully it will get accepted and there will
+  be a release soon.
 description: Empty estimates cause yamltrak to break, which is not good.
 estimate: 1 Hour
 priority: high
