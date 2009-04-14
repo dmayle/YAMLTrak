@@ -54,7 +54,7 @@ def issues(repositories=[], dbfolder='issues', status='open'):
             except AttributeError:
                 priority = 'high'
 
-            issue['estimate'] = {'scale':scale, 'text':issue['estimate']}
+            issue['estimate'] = {'scale':scale, 'text':issue.get('estimate') is None and '' or issue['estimate']}
             issue['priority'] = priority
     return issues
 
@@ -179,7 +179,18 @@ def relatedissues(repository=None, dbfolder='issues', filename=None, ids=None):
     myui = ui.ui()
     repo = hg.repository(myui, repository)
 
+    # Lookup into the status lists returned by repo.status()
+    # ['modified', 'added', 'removed', 'deleted', 'unknown', 'ignored', 'clean']
+    statuses = repo.status()
+    modified, added = statuses[:2]
+
     for id in ids:
+        if path.join(dbfolder, id) in added or path.join(dbfolder, id) in modified:
+            # We consider all uncommitted issues to be related, since they
+            # would become related on commit.
+            issues.append(id)
+            continue
+
         try:
             filectxt = repo['tip'][path.join(dbfolder, id)]
         except LookupError:

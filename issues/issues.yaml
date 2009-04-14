@@ -137,7 +137,7 @@ e66bdaf483b9e84010f78c71829391f0847a9fe6:
   estimate: 2 Hours
   group: unfiled
   priority: high
-  status: open
+  status: closed
   title: Related feature should include uncommitted tickets
 e9a7d32c7c213b132b4620b620358e5f6e11b58a:
   comment: The current comment on this ticket.
