@@ -5,6 +5,39 @@ from mercurial import hg, ui
 import os
 from argparse import ArgumentParser
 
+def guess_ticket_id(repository):
+    try:
+        issues = yamltrak.issues([repository])[os.path.basename(repository)]
+    except KeyError:
+        # There is no issue database, or maybe just no open issues...
+        print 'No open issues found'
+        import sys
+        sys.exit(1)
+
+    # Use repo.status to get this list
+    myui = ui.ui()
+    repo = hg.repository(myui, repository)
+    modified, added = repo.status()[:2]
+    files = modified + added
+    found = {}
+    for filename in files:
+        relatedissues = yamltrak.relatedissues(repository, filename=filename, ids=issues.keys())
+        for issueid in relatedissues:
+            found[issueid] = issues[issueid].get('title', '')
+
+    if len(found.keys()) > 1:
+        color = None
+        print colored('Too many linked issues found, please specify one.', color, attrs=['reverse'])
+        for issueid in found:
+            print colored(textwrap.fill('Issue: %s' % issueid,
+                initial_indent='    ', subsequent_indent='    '), color, attrs=[])
+            print colored(textwrap.fill(found[issueid].upper(),
+                initial_indent='    ', subsequent_indent='    '), color, attrs=[])
+
+        import sys
+        sys.exit(1)
+    return found.keys()[0]
+
 def unpack_add(repository, args):
     skeleton = yamltrak.issue(repository, 'issues', id='skeleton', detail=False)[0]['data']
     issue = {}
@@ -47,6 +80,8 @@ def unpack_list(repository, args):
                 initial_indent=indent, subsequent_indent=indent), color)
 
 def unpack_edit(repository, args):
+    if not args.id:
+        args.id = guess_ticket_id(repository)
     skeleton = yamltrak.issue(repository, 'issues', id='skeleton', detail=False)[0]['data']
     issue = yamltrak.issue(repository, 'issues', id=args.id, detail=False)[0]['data']
     newissue = {}
@@ -55,6 +90,8 @@ def unpack_edit(repository, args):
     yamltrak.edit_issue(repository, id=args.id, issue=newissue)
 
 def unpack_show(repository, args):
+    if not args.id:
+        args.id = guess_ticket_id(repository)
     issuedata = yamltrak.issue(repository, id=args.id, detail=args.detail)
     if not issuedata or not issuedata[0].get('data'):
         print 'No such ticket found'
@@ -126,6 +163,8 @@ def unpack_init(repository, args):
     print 'Initialized repository'
 
 def unpack_close(repository, args):
+    if not args.id:
+        args.id = guess_ticket_id(repository)
     skeleton = yamltrak.issue(repository, 'issues', id='skeleton', detail=False)[0]['data']
     issue = yamltrak.issue(repository, 'issues', id=args.id, detail=False)[0]['data']
     newissue = {}
@@ -188,7 +227,7 @@ def main():
     parser_edit.set_defaults(func=unpack_edit)
     for field, help in skeleton.iteritems():
         parser_edit.add_argument('-' + field[0], '--' + field, help=help)
-    parser_edit.add_argument('id', help='The issue id to edit.')
+    parser_edit.add_argument('id', nargs='?', help='The issue id to edit.')
 
     # List all issues
     parser_list = subparsers.add_parser('list', help="List all issues.")
@@ -202,7 +241,7 @@ def main():
     parser_show.set_defaults(func=unpack_show)
     parser_show.add_argument('-d', '--detail', default=False, action='store_true',
         help='Show a detailed view of the ticket')
-    parser_show.add_argument('id',
+    parser_show.add_argument('id', nargs='?',
         help='The issue id to show the details for.')
 
     # Get issues related to a file
@@ -223,7 +262,7 @@ def main():
     # Close an issue
     parser_close = subparsers.add_parser('close', help="Close an issue.")
     parser_close.set_defaults(func=unpack_close)
-    parser_close.add_argument('id',
+    parser_close.add_argument('id', nargs='?',
         help='The issue id to close.')
 
     # Purge an issue

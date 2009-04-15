@@ -23,7 +23,7 @@
   estimate: 2 Hours
   group: unfiled
   priority: high
-  status: open
+  status: closed
   title: Command line guesses ticketid
 325eceeb76db45124d740b411a0886a0ebfcffcc:
   description: A detailed description of this ticket.

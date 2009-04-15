@@ -22,8 +22,7 @@ setup(name='YAMLTrak',
           "PyYaml",
           "argparse", # Once my issue is fixed, specify the version
           "Mercurial>=1.2",
-          "termcolor=0.1.1",
-    ],
+          "termcolor==0.1.1",
       ],
       entry_points="""
       # -*- Entry points: -*-
