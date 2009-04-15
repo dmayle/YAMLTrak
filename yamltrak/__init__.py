@@ -1,3 +1,20 @@
+# Copyright 2009 Douglas Mayle
+
+# This file is part of YAMLTrak.
+
+# YAMLTrak is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# YAMLTrak is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with YAMLTrak.  If not, see <http://www.gnu.org/licenses/>.
+
 # Remember when editing issues to always perform work on the issue file first,
 # and then the index.  This way the issue file is the canonical storage medium,
 # and the index is just that.  All code will make sure to use the same version
