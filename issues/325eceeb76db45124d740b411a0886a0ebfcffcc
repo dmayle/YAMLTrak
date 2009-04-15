@@ -1,7 +1,8 @@
-comment: Dont forget to change the groups when the project tab is changed.
+comment: This is actually a DVDev ticket
 description: A detailed description of this ticket.
 estimate: 1 Day
+group: unfiled
 priority: high
-status: open
+status: closed
 title: In large ticket databases, dragging is impractical, we need the groups to show
   up as tools
