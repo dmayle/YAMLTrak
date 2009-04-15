@@ -1,9 +1,9 @@
-comment: Added colored output in the list view.
+comment: We now have a related tickets feature on the command line.
 description: Create a command line interface, maybe with urwid, in two parts.  The
   yt command is standalone and offers a complete interface.  Also create an hg extension
   that can do things like blocking commit if you haven't updated a ticket...
 estimate: 1 week
 group: unfiled
 priority: green, red, or black
-status: open
+status: closed
 title: Make a command line interface

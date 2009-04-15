@@ -1,6 +1,7 @@
 import yamltrak
 import textwrap
 from termcolor import colored
+from mercurial import hg, ui
 import os
 from argparse import ArgumentParser
 
@@ -98,7 +99,27 @@ def unpack_show(repository, args):
 
 
 def unpack_related(repository, args):
-    pass
+    try:
+        issues = yamltrak.issues([repository])[os.path.basename(repository)]
+    except KeyError:
+        # There is no issue database, or maybe just no open issues...
+        print 'No open issues found'
+        return
+    if not args.files:
+        # Use repo.status to get this list
+        myui = ui.ui()
+        repo = hg.repository(myui, repository)
+        modified, added = repo.status()[:2]
+        args.files = modified + added
+    for filename in args.files:
+        relatedissues = yamltrak.relatedissues(repository, filename=filename, ids=issues.keys())
+        color = None
+        print colored('File: %s' % filename, color, attrs=['reverse'])
+        for issueid in relatedissues:
+            print colored(textwrap.fill('Issue: %s' % issueid,
+                initial_indent='    ', subsequent_indent='    '), color, attrs=[])
+            print colored(textwrap.fill(issues[issueid].get('title', '').upper(),
+                initial_indent='    ', subsequent_indent='    '), color, attrs=[])
 
 def unpack_init(repository, args):
     yamltrak.init(repository)
@@ -188,6 +209,11 @@ def main():
     parser_related = subparsers.add_parser('related', help="List the issues "
                                            "related to given files.")
     parser_related.set_defaults(func=unpack_related)
+    parser_related.add_argument( 'files', metavar='file', type=str, nargs='*',
+        default=[],
+        help='List the open issues related to these files.  If no files are '
+        'supplied, and the list of currently uncommitted files (excluding '
+        'tickets) will be checked.')
 
     # Initialize DV
     parser_init = subparsers.add_parser('init', help="Initialize issue "

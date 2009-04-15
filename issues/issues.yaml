@@ -124,7 +124,7 @@ d2a36fe1efc5305f02e295063dc02cb3b21fe3ce:
   estimate: 1 week
   group: unfiled
   priority: green, red, or black
-  status: open
+  status: closed
   title: Make a command line interface
 e50ae42a8ba3:
   description: Issue tracking using a versioned database would represent an entirely
