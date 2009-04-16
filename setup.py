@@ -25,7 +25,14 @@ def hybrid_setup(**kwargs):
     # unless on windows, as pkg_resource scans have too much overhead.
     if sys.platform != 'win32':
         # On most platforms, we'll use both approaches.
-        if 'develop' in sys.argv:
+        if 'setuptools' in sys.modules:
+            # Someone used easy_install to run this.  I really want the correcy
+            # script installed.
+            from subprocess import Popen
+            child = Popen([sys.executable] + sys.argv)
+            exit_code = child.wait()
+            return exit_code
+        elif 'develop' in sys.argv:
             sys.argv[sys.argv.index('develop')] = 'install'
             dutils_setup(**kwargs)
             sys.argv[sys.argv.index('install')] = 'develop'
@@ -37,13 +44,18 @@ def hybrid_setup(**kwargs):
 
             from setuptools import setup as stools_setup
             stools_setup(**kwargs)
-        elif 'setuptools' in sys.modules:
-            # Someone used easy_install to run this.  I really want the correcy
-            # script installed.
-            from subprocess import Popen
-            child = Popen([sys.executable] + sys.argv)
-            exit_code = child.wait()
-            return exit_code
+        elif 'bdist_egg' in sys.argv:
+            sys.argv[sys.argv.index('bdist_egg')] = 'bdist'
+            dutils_setup(**kwargs)
+            sys.argv[sys.argv.index('bdist')] = 'bdist_egg'
+
+            # Now that we've installed our script using distutils, we'll strip it
+            # out of the arguments and call setuptools for the rest.
+            if 'scripts' in kwargs:
+                del(kwargs['scripts'])
+
+            from setuptools import setup as stools_setup
+            stools_setup(**kwargs)
         else:
             dutils_setup(**kwargs)
 
