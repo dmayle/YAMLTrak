@@ -54,6 +54,7 @@ def hybrid_setup(**kwargs):
     # unless on windows, as pkg_resource scans have too much overhead.
     if sys.platform != 'win32':
         # On most platforms, we'll use both approaches.
+        import pdb; pdb.set_trace()
         if 'setuptools' in sys.modules:
             # Someone used easy_install to run this.  I really want the correct
             # script installed.
