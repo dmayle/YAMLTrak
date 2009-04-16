@@ -1,0 +1,8 @@
+comment: The current comment on this ticket.
+description: YAMLTrak should detect the repository root, and find the issue database
+  from there.
+estimate: 1 Hour
+group: unfiled
+priority: high, normal, low
+status: open
+title: Need to be in repo root to work with tickets

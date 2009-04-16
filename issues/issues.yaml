@@ -176,6 +176,15 @@ e9a7d32c7c213b132b4620b620358e5f6e11b58a:
   priority: high, normal, low
   status: The current status of the ticket.
   title: Use color in command line output
+f46ffcdd7cf341f689afa40a5a3c619be5c56273:
+  comment: The current comment on this ticket.
+  description: YAMLTrak should detect the repository root, and find the issue database
+    from there.
+  estimate: 1 Hour
+  group: unfiled
+  priority: high, normal, low
+  status: open
+  title: Need to be in repo root to work with tickets
 f75cd69163ff8d3cf3a35a18db2af92e161551aa:
   description: The changes for a ticket version are attributed to the older version,
     rather than the newer for the changes.
