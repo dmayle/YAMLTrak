@@ -19,6 +19,7 @@ from termcolor import colored
 from mercurial import hg, ui
 import os
 from argparse import ArgumentParser
+from yamltrak import IssueDB, edit_issue
 
 def guess_ticket_id(repository):
     try:
@@ -54,7 +55,7 @@ def guess_ticket_id(repository):
     return found.keys()[0]
 
 def unpack_add(issuedb, repository, args):
-    skeleton = issuedb.issue(id='skeleton', detail=False)[0]['data']
+    skeleton = issuedb.skeleton[0]['data']
     issue = {}
     for field in skeleton:
         issue[field] = getattr(args, field, None) or skeleton[field]
@@ -62,42 +63,41 @@ def unpack_add(issuedb, repository, args):
     print 'Added ticket: %s' % newid
 
 def unpack_list(issuedb, repository, args):
-    allissues = issues([repository], status=args.status)
-    for issuedb in allissues.itervalues():
-        for id, issue in issuedb.iteritems():
-            # Try to use color for clearer output
-            color = None
-            if 'high' in issue.get('priority',''):
-                color = 'red'
-            elif 'normal' in issue.get('priority',''):
-                pass
-            elif 'low' in issue.get('priority',''):
-                color = 'blue'
-            else:
-                color = 'red'
+    issues = issuedb.issues(status=args.status)
+    for id, issue in issues.iteritems():
+        # Try to use color for clearer output
+        color = None
+        if 'high' in issue.get('priority',''):
+            color = 'red'
+        elif 'normal' in issue.get('priority',''):
+            pass
+        elif 'low' in issue.get('priority',''):
+            color = 'blue'
+        else:
+            color = 'red'
 
-            # We'll use status indicators on indent for estimate
-            if 'long' in issue.get('estimate', {}).get('scale').lower():
-                indent = '>>>>'
-            elif 'medium' in issue.get('estimate', {}).get('scale').lower():
-                indent = '> > '
-            elif 'short' in issue.get('estimate', {}).get('scale').lower():
-                indent = '>   '
-            else:
-                indent = '===='
+        # We'll use status indicators on indent for estimate
+        if 'long' in issue.get('estimate', {}).get('scale').lower():
+            indent = '>>>>'
+        elif 'medium' in issue.get('estimate', {}).get('scale').lower():
+            indent = '> > '
+        elif 'short' in issue.get('estimate', {}).get('scale').lower():
+            indent = '>   '
+        else:
+            indent = '===='
 
-            print colored('Issue: %s' % id, color, attrs=['reverse'])
-            print colored(textwrap.fill(issue.get('title', '').upper(),
-                initial_indent=indent, subsequent_indent=indent), color, attrs=[])
-            print colored(textwrap.fill(issue.get('description'),
-                initial_indent=indent, subsequent_indent=indent), color)
-            print colored(textwrap.fill(issue.get('estimate',{}).get('text',''),
-                initial_indent=indent, subsequent_indent=indent), color)
+        print colored('Issue: %s' % id, color, attrs=['reverse'])
+        print colored(textwrap.fill(issue.get('title', '').upper(),
+            initial_indent=indent, subsequent_indent=indent), color, attrs=[])
+        # print colored(textwrap.fill(issue.get('description',''),
+        #     initial_indent=indent, subsequent_indent=indent), color)
+        print colored(textwrap.fill(issue.get('estimate',{}).get('text',''),
+            initial_indent=indent, subsequent_indent=indent), color)
 
 def unpack_edit(issuedb, repository, args):
     if not args.id:
         args.id = guess_ticket_id(repository)
-    skeleton = issuedb.issue(id='skeleton', detail=False)[0]['data']
+    skeleton = issuedb.skeleton[0]['data']
     issue = issuedb.issue(id=args.id, detail=False)[0]['data']
     newissue = {}
     for field in skeleton:
@@ -181,7 +181,7 @@ def unpack_init(issuedb, repository, args):
 def unpack_close(issuedb, repository, args):
     if not args.id:
         args.id = guess_ticket_id(repository)
-    skeleton = issuedb.issue(id='skeleton', detail=False)[0]['data']
+    skeleton = issuedb.skeleton[0]['data']
     issue = issuedb.issue(id=args.id, detail=False)[0]['data']
     newissue = {}
     for field in skeleton:
@@ -203,12 +203,12 @@ def main():
     here = os.getcwd()
     try:
         issuedb = IssueDB(os.getcwd())
-    except LookupException:
+    except LookupError:
         # This means that there was no repository here.
         print 'Unable to find a repository.'
         import sys
         sys.exit(1)
-    except Exception:
+    except NameError:
         # This means no issue database was found.  We give the option to
         # initialize one.
         parser = ArgumentParser(prog='yt', description='YAMLTrak is a distributed version controlled issue tracker.')
@@ -217,17 +217,17 @@ def main():
                                             "database.")
         parser_init.set_defaults(func=unpack_init)
         args = parser.parse_args()
-        args.func(issuedb, issuedb.root(), args)
+        args.func(issuedb, issuedb.root, args)
         return
 
-    skeleton = issuedb.issue('skeleton', detail=False)
-    newticket = issuedb.issue('newticket', detail=False)
+    skeleton = issuedb.skeleton
+    addskeleton = issuedb.addskeleton
 
     skeleton = skeleton[0]['data']
-    if newticket:
-        newticket = newticket[0]['data']
+    if addskeleton:
+        addskeleton = addskeleton[0]['data']
     else:
-        newticket = {}
+        addskeleton = {}
 
     parser = ArgumentParser(prog='yt', description='YAMLTrak is a distributed version controlled issue tracker.')
     # parser.add_argument('-r', '--repository',
@@ -242,9 +242,9 @@ def main():
     parser_add = subparsers.add_parser('add', help="Add an issue.")
     parser_add.set_defaults(func=unpack_add)
     for field, help in skeleton.iteritems():
-        if field not in newticket:
+        if field not in addskeleton:
             parser_add.add_argument('-' + field[0], '--' + field, help=help)
-    for field, help in newticket.iteritems():
+    for field, help in addskeleton.iteritems():
         parser_add.add_argument('-' + field[0], '--' + field, required=True, help=skeleton[field])
     #parser_add.add_argument(
 
@@ -300,7 +300,7 @@ def main():
     #                                     "for a group of issues.")
     # parser_burn.set_defaults(func=unpack_burndown)
     args = parser.parse_args()
-    args.func(here, args)
+    args.func(issuedb, issuedb.root, args)
 
 
 if __name__ == '__main__':

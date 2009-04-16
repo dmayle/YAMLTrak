@@ -76,6 +76,10 @@
   status: normal
   title: Allow empty estimates
 6db797ace609edd77643f6fda2d43c4752a808e2:
+  description: The current system is based on functions only.  This means that its
+    much more difficult to use (more arguments each time) and that there is a lot
+    of work thrown away with each call.  Add an object API that can do things like
+    share ui and repo objects, cache important metadata, etc...
   estimate: 3 Days
   group: unfiled
   priority: high, normal, low
@@ -192,6 +196,7 @@ f75cd69163ff8d3cf3a35a18db2af92e161551aa:
   status: closed
   title: Ticket detail history is off by one.
 skeleton:
+  description: A detailed description of this ticket.
   estimate: A time estimate for completion
   group: unfiled
   priority: The ticket priority.

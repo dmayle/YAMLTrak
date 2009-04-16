@@ -32,48 +32,16 @@ def issues(repositories=[], dbfolder='issues', status='open'):
     issues = {}
     for repo in repositories:
         try:
-            with open(path.join(repo, dbfolder, 'issues.yaml')) as indexfile:
-                issues[path.basename(repo)] = dict(issue for issue in yaml.load(indexfile.read()).iteritems() if issue[0] != 'skeleton' and status in issue[1].get('status', '').lower())
-        except IOError:
-            # Not all listed repositories have an issue tracking database
-            pass
-    for issuedb in issues:
-        for issue in issues[issuedb].itervalues():
-            # A proper version of this would figure out the actual time value.
-            # We'll take a shortcut and look at the word.
-            try:
-                timescale = issue['estimate'].split()[1].rstrip('s')
-                if timescale.lower() == 'hour' or timescale.lower() == 'minute':
-                    scale = 'short'
-                elif timescale.lower() == 'day':
-                    scale = 'medium'
-                else:
-                    scale = 'long'
-            except IndexError:
-                scale = 'unplanned'
-            except AttributeError:
-                scale = 'unplanned'
-            try:
-                priority = issue['priority'].lower()
-                if 'high' in priority:
-                    priority = 'high'
-                elif 'normal' in priority:
-                    priority = 'normal'
-                elif 'low' in priority:
-                    priority = 'low'
-                else:
-                    # Don't want any slipping through the cracks.
-                    priority = 'high'
+            issuedb = IssueDB(repository, dbfolder=dbfolder)
+        except LookupError:
+            # No repo found
+            return None
+        except UnboundLocalError:
+            # No issue database
+            return None
 
-            except KeyError:
-                priority = 'high'
-            except IndexError:
-                priority = 'high'
-            except AttributeError:
-                priority = 'high'
+        issues[path.basename(isseudb.root)] = issuedb.issues(status)
 
-            issue['estimate'] = {'scale':scale, 'text':issue.get('estimate') is None and '' or issue['estimate']}
-            issue['priority'] = priority
     return issues
 
 def issuediff(revx, revy):
@@ -113,6 +81,18 @@ def issuediff(revx, revy):
             
 def edit_issue(repository=None, dbfolder='issues', issue=None, id=None):
     """Modify the copy of the issue on disk, both in it's file, and the index."""
+    try:
+        issuedb = IssueDB(repository, dbfolder=dbfolder)
+    except LookupError:
+        # No repo found
+        return None
+    except UnboundLocalError:
+        # No issue database
+        return None
+
+    issuedb.edit(issue=issue, id=id)
+    return
+
     if not issue or not id:
         return
     try:
@@ -140,10 +120,10 @@ def edit_issue(repository=None, dbfolder='issues', issue=None, id=None):
 def issue(repository=None, dbfolder='issues', id=None, detail=True):
     try:
         issuedb = IssueDB(repository, dbfolder=dbfolder)
-    except LookupException:
+    except LookupError:
         # No repo found
         return None
-    except Exception:
+    except UnboundLocalError:
         # No issue database
         return None
 
@@ -237,7 +217,7 @@ def init(repository, dbfolder='issues'):
         'group': 'unfiled',
         'priority': 'high, normal, low',
         'comment': 'The current comment on this ticket.'}
-    NEWTICKET = {
+    ADDSKELETON = {
         'title': 'A title for the ticket',
         'description': 'A detailed description of this ticket.',
         'estimate': 'A time estimate for completion'}
@@ -251,7 +231,7 @@ def init(repository, dbfolder='issues'):
     with open(path.join(repository, dbfolder, 'skeleton'), 'w') as skeletonfile:
         skeletonfile.write(yaml.dump(SKELETON, default_flow_style=False))
     with open(path.join(repository, dbfolder, 'newticket'), 'w') as skeletonfile:
-        skeletonfile.write(yaml.dump(NEWTICKET, default_flow_style=False))
+        skeletonfile.write(yaml.dump(ADDSKELETON, default_flow_style=False))
     with open(path.join(repository, dbfolder, 'issues.yaml'), 'w') as skeletonfile:
         skeletonfile.write(yaml.dump(INDEX, default_flow_style=False))
     myui = ui.ui()
@@ -393,19 +373,20 @@ def burndown(repository, groupname, dbfolder='issues'):
 
     return checkpoints
 
-class IssuesDB(object):
+class IssueDB(object):
     """\
     An object that represents an issue database.  This provides a simpler means
     of accessing the YAMLTrak API than constantly passing in all of the
     parameters. In addition, it caches some of the work performed so that
     multiple operations run faster.
     """
-    def __init__(self, folder, dbfolder='issues'):
+    def __init__(self, folder, dbfolder='issues', indexfile='issues.yaml'):
         self.dbfolder = dbfolder
+        self.indexfile = indexfile
 
         # If we ever do a lookup on the skeleton, we'll cache it for speed.
-        self.skeleton = None
-        self.newticket = None
+        self._skeleton = None
+        self._addskeleton = None
         self.ui = ui.ui()
         try:
             self.repo = hg.repository(self.ui, folder)
@@ -416,8 +397,56 @@ class IssuesDB(object):
             raise LookupException
         self.root = self.repo.root
 
-    def root(self):
-        return self.root
+    @property
+    def _indexfile(self):
+        """Helper that returns the full path of the issues index file."""
+        return path.join(self.root, self.dbfolder, self.indexfile)
+
+    def issues(self, status='open'):
+        issuedb = {}
+        try:
+            with open(self._indexfile) as indexfile:
+                issuedb = dict(issue for issue in yaml.load(indexfile.read()).iteritems() if issue[0] != 'skeleton' and status in issue[1].get('status', '').lower())
+        except IOError:
+            # Not all listed repositories have an issue tracking database
+            return issuedb
+        for issue in issuedb.itervalues():
+            # A proper version of this would figure out the actual time value.
+            # We'll take a shortcut and look at the word.
+            try:
+                timescale = issue['estimate'].split()[1].rstrip('s')
+                if timescale.lower() == 'hour' or timescale.lower() == 'minute':
+                    scale = 'short'
+                elif timescale.lower() == 'day':
+                    scale = 'medium'
+                else:
+                    scale = 'long'
+            except IndexError:
+                scale = 'unplanned'
+            except AttributeError:
+                scale = 'unplanned'
+            try:
+                priority = issue['priority'].lower()
+                if 'high' in priority:
+                    priority = 'high'
+                elif 'normal' in priority:
+                    priority = 'normal'
+                elif 'low' in priority:
+                    priority = 'low'
+                else:
+                    # Don't want any slipping through the cracks.
+                    priority = 'high'
+
+            except KeyError:
+                priority = 'high'
+            except IndexError:
+                priority = 'high'
+            except AttributeError:
+                priority = 'high'
+
+            issue['estimate'] = {'scale':scale, 'text':issue.get('estimate') is None and '' or issue['estimate']}
+            issue['priority'] = priority
+        return issuedb
 
     def issue(self, id, detail=True):
         """\
@@ -427,27 +456,12 @@ class IssuesDB(object):
         date.
         """
 
-        # I suspect that we may have need of an issue skeleton many times while
-        # using this object, so I'll cache it if it's retreived.  The same is
-        # true of the newticket filter.
-        if 'skeleton' == id and self.skeleton and not detail:
-            return skeleton
-
-        if 'newticket' == id and self.newticket and not detail:
-            return newticket
-
         # Use revision to walk backwards intelligently.
         # Change this to only accept one repository and to return a history
         issue = None
         try:
             with open(path.join(self.root, self.dbfolder, id)) as issuefile:
                 issue = [{'data':yaml.safe_load(issuefile.read())}]
-
-            # Cache the magic tickets
-            if 'skeleton' == id:
-                self.skeleton = issue
-            elif 'newticket' == id:
-                self.newticket = issue
 
             if not detail:
                 return issue
@@ -493,3 +507,43 @@ class IssuesDB(object):
             return
 
         return issue
+
+    @property
+    def skeleton(self):
+        if self._skeleton:
+            return self._skeleton
+        self._skeleton = self.issue('skeleton', detail=False)
+        return self._skeleton
+
+    @property
+    def addskeleton(self):
+        if self._addskeleton:
+            return self._addskeleton
+        self._addskeleton = self.issue('newticket', detail=False)
+        return self._addskeleton
+
+    def edit(self, id=None, issue=None):
+        if not issue or not id:
+            return
+        # What!?! We should be using the skeleton here!
+        try:
+            with open(path.join(self.root, self.dbfolder, id), 'w') as issuefile:
+                issuefile.write(yaml.safe_dump(issue, default_flow_style=False))
+        except IOError:
+            return false
+
+        try:
+            with open(self._indexfile, 'r') as indexfile:
+                index = yaml.load(indexfile.read())
+
+            # We only write out the properties listed in the skeleton to the index.
+            indexissue = {}
+            for key in index['skeleton']:
+                if key in issue:
+                    indexissue[key] = issue[key]
+            index[id] = indexissue
+
+            with open(path.join(self.root, dbfolder, 'issues.yaml'), 'w') as indexfile:
+                indexfile.write(yaml.safe_dump(index, default_flow_style=False))
+        except IOError:
+            return false
