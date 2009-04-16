@@ -1,4 +1,4 @@
-comment: The current comment on this ticket.
+comment: Forget to default to none... That might blow up...
 description: The current system is based on functions only.  This means that its much
   more difficult to use (more arguments each time) and that there is a lot of work
   thrown away with each call.  Add an object API that can do things like share ui
@@ -6,5 +6,5 @@ description: The current system is based on functions only.  This means that its
 estimate: 3 Days
 group: unfiled
 priority: high, normal, low
-status: The current status of the ticket.
+status: open
 title: Add an object based API for ease and speed

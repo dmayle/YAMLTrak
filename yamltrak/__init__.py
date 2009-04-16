@@ -405,6 +405,7 @@ class IssuesDB(object):
 
         # If we ever do a lookup on the skeleton, we'll cache it for speed.
         self.skeleton = None
+        self.newticket = None
         self.ui = ui.ui()
         try:
             self.repo = hg.repository(self.ui, folder)

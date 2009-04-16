@@ -58,15 +58,10 @@
   status: normal
   title: Allow empty estimates
 6db797ace609edd77643f6fda2d43c4752a808e2:
-  comment: The current comment on this ticket.
-  description: The current system is based on functions only.  This means that its
-    much more difficult to use (more arguments each time) and that there is a lot
-    of work thrown away with each call.  Add an object API that can do things like
-    share ui and repo objects, cache important metadata, etc...
   estimate: 3 Days
   group: unfiled
   priority: high, normal, low
-  status: The current status of the ticket.
+  status: open
   title: Add an object based API for ease and speed
 7974ac348b6025cb932efbb437c998a30ec60d85:
   description: Create a skeleton ticket, and an index file with a ticket skeleton
