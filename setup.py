@@ -59,6 +59,7 @@ def hybrid_setup(**kwargs):
             # script installed.
             import setuptools.command.easy_install
             setuptools.command.easy_install.install_script = install_script
+            setuptools.command.install_script = install_script
 
         if 'develop' in sys.argv:
             sys.argv[sys.argv.index('develop')] = 'install'
