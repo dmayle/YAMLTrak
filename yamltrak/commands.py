@@ -19,11 +19,11 @@ from termcolor import colored
 from mercurial import hg, ui
 import os
 from argparse import ArgumentParser
-from yamltrak import IssueDB, NoRepository, NoIssueDB, init
+from yamltrak import IssueDB, NoRepository, NoIssueDB, init, issues as issues_command, relatedissues
 
 def guess_ticket_id(repository):
     try:
-        issues = issues([repository])[os.path.basename(repository)]
+        issues = issues_command([repository])[os.path.basename(repository)]
     except KeyError:
         # There is no issue database, or maybe just no open issues...
         print 'No open issues found'
@@ -55,11 +55,15 @@ def guess_ticket_id(repository):
     return found.keys()[0]
 
 def unpack_add(issuedb, repository, args):
-    skeleton = issuedb.skeleton
+    # We should be able to avoid this somehow by using an object dictionary.
+    skeleton_add = issuedb.skeleton_add
     issue = {}
-    for field in skeleton:
-        issue[field] = getattr(args, field, None) or skeleton[field]
-    newid = add(repository, issue=issue)
+    for field in skeleton_add:
+        issue[field] = getattr(args, field, None)
+        if issue[field] is None:
+            issue[field] = skeleton_add[field]
+
+    newid = issuedb.add(issue=issue)
     print 'Added ticket: %s' % newid
 
 def unpack_list(issuedb, repository, args):

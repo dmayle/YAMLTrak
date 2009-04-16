@@ -154,31 +154,16 @@ def _hex_node(node_binary):
 
 def add(repository, issue, dbfolder='issues', status=['open']):
     """Add an issue to the database"""
-    if 'status' not in issue:
-        issue['status'] = 'open'
-    if 'comment' not in issue:
-        issue['comment'] = 'Opening ticket'
-    myui = ui.ui()
-    repo = hg.repository(myui, repository)
-    # This can fail in an empty repository.  Handle this
-    hgcommands.tag(myui, repo, NEW_TICKET_TAG, force=True, message='TICKETPREP: %s' % issue['title'])
-    context = repo['tip']
-    ticketid = _hex_node(context.node())
     try:
-        with open(path.join(repository, dbfolder, ticketid), 'w') as issuefile:
-            issuefile.write(yaml.safe_dump(issue, default_flow_style=False))
-        hgcommands.add(myui, repo, path.join(repository, dbfolder, ticketid))
-    except IOError:
-        return false
-    try:
-        with open(path.join(repository, dbfolder, 'issues.yaml'), 'r') as indexfile:
-            issues = yaml.load(indexfile.read())
-        with open(path.join(repository, dbfolder, 'issues.yaml'), 'w') as indexfile:
-            issues[ticketid] = issue
-            indexfile.write(yaml.safe_dump(issues, default_flow_style=False))
-        return ticketid
-    except IOError:
-        return false
+        issuedb = IssueDB(repository, dbfolder=dbfolder)
+    except NoRepository:
+        # No repo found
+        return None
+    except NoIssueDB:
+        # No issue database
+        return None
+
+    return issuedb.add(issue=issue, status=status)
 
 def init(repository, dbfolder='issues'):
     try:
@@ -350,12 +335,17 @@ def burndown(repository, groupname, dbfolder='issues'):
     return checkpoints
 
 class NoRepository(Exception):
+    """Exception raised when the folder given isn't inside a DVCS."""
     def __init__(self, repository):
         self.repository = repository
     def __str__(self):
         return 'No repository found at: %s' % self.repository
 
 class NoIssueDB(Exception):
+    """\
+    Exception raised when the repository given doesn't contain an issue
+    database.
+    """
     def __init__(self, repository):
         self.repository = repository
     def __str__(self):
@@ -410,6 +400,9 @@ class IssueDB(object):
         return path.join(self.root, self.dbfolder, self.__skeleton_addfile)
 
     def issues(self, status='open'):
+        """\
+        Return a list of issues in the database with the given status.
+        """
         issuedb = {}
         try:
             with open(self._indexfile) as indexfile:
@@ -517,6 +510,10 @@ class IssueDB(object):
 
     @property
     def skeleton(self):
+        """\
+        Return the issue database skeleton, with a list of fields and default
+        values.
+        """
         if self._skeleton:
             return self._skeleton
         self._skeleton = self.issue(self.__skeletonfile, detail=False)
@@ -526,6 +523,10 @@ class IssueDB(object):
 
     @property
     def skeleton_add(self):
+        """\
+        Return the issue database add skeleton, with a list of fields and
+        default values.
+        """
         if self._skeleton_add:
             return self._skeleton_add
         self._skeleton_add = self.issue(self.__skeleton_addfile, detail=False)
@@ -533,19 +534,50 @@ class IssueDB(object):
             self._skeleton_add = self._skeleton_add[0]['data']
         return self._skeleton_add
 
+    def add(self, issue, status='open'):
+        """\
+        Add an issue to the issue database.  Returns an issueid if successful.
+        All fields are filtered by those in the add issue skeleton.
+        """
+        addissue = {}
+        for field, default in self.skeleton_add.iteritems():
+            addissue[field] = issue.get(field, default)
+
+        if 'status' not in addissue:
+            addissue['status'] = status
+        if 'comment' not in addissue:
+            addissue['comment'] = 'Opening ticket'
+
+        # This can fail in an empty repository.  Handle this
+        hgcommands.tag(self.ui, self.repo, NEW_TICKET_TAG, force=True, message='TICKETPREP: %s' % addissue.get('title', 'No ticket title'))
+        context = self.repo['tip']
+        ticketid = _hex_node(context.node())
+        try:
+            with open(path.join(self.root, self.dbfolder, ticketid), 'w') as issuefile:
+                issuefile.write(yaml.safe_dump(addissue, default_flow_style=False))
+            hgcommands.add(self.ui, self.repo, path.join(self.root, self.dbfolder, ticketid))
+        except IOError:
+            return false
+
+        # Poor man's code reuse.  Since I haven't yet factored out the index
+        # updating, I'll just call edit without any values.
+        return self.edit(id=ticketid, issue={}) and ticketid
+
     def edit(self, id=None, issue=None):
         """\
         Save the issue with the given id.  The issue must already exist in the
         database.  Because we already filter using the skeleton, you can don't
         have to worry that any unwanted fields will show up.
         """
-        if not issue or not id:
+        if issue is None or not id:
             return
 
-        # We use the skeleton to filter any edits.
+        # We use the skeleton to filter any edits. We also leave any values
+        # from the original issue intact.
+        oldissue = self.issue(id=id, detail=False)[0]['data']
         saveissue = {}
         for field, default in self.skeleton.iteritems():
-            saveissue[field] = issue.get(field, default)
+            saveissue[field] = issue.get(field, oldissue.get(field, default))
             if saveissue[field] is None:
                 # I don't like null values in the database.
                 saveissue[field] = ''
@@ -564,11 +596,12 @@ class IssueDB(object):
             # We only write out the properties listed in the skeleton to the index.
             indexissue = {}
             for field in index['skeleton']:
-                if field in issue:
-                    indexissue[field] = issue[field]
+                if field in saveissue:
+                    indexissue[field] = saveissue[field]
             index[id] = indexissue
 
             with open(path.join(self.root, self.dbfolder, 'issues.yaml'), 'w') as indexfile:
                 indexfile.write(yaml.safe_dump(index, default_flow_style=False))
         except IOError:
             return false
+        return True
