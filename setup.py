@@ -46,6 +46,7 @@ def restore_distutils_install_script(self, dist, script_name, script_text, dev_p
     self.write_script(script_name, script_text, 'b')
 
 def install_script(self, dist, script_name, script_text, dev_path=None):
+    import pdb; pdb.set_trace()
     self.write_script(script_name, script_text, 'b')
 
 def hybrid_setup(**kwargs):
