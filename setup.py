@@ -15,12 +15,33 @@
 # You should have received a copy of the GNU General Public License
 # along with YAMLTrak.  If not, see <http://www.gnu.org/licenses/>.
 
-from setuptools import setup, find_packages
-import sys, os
+import sys
+from distutils.core import setup as dutils_setup
 
 version = '0.5'
 
-setup(name='YAMLTrak',
+def hybrid_setup(**kwargs):
+    # In a hybrid approach, we don't want setuptools handling script install,
+    # unless on windows, as pkg_resource scans have too much overhead.
+    if sys.platform != 'win32':
+        # On most platforms, we'll use both approaches.
+        if sys.argv[-1] == 'develop':
+            sys.argv[-1] = 'install'
+            dutils_setup(**kwargs)
+            sys.argv[-1] = 'develop'
+        else:
+            dutils_setup(**kwargs)
+
+        # Now that we've installed our script using distutils, we'll strip it
+        # out of the arguments and call setuptools for the rest.
+        for key, value in kwargs.iteritems():
+            if key in ['scripts']:
+                del(kwargs[key])
+
+    from setuptools import setup as stools_setup
+    stools_setup(**kwargs)
+
+hybrid_setup(name='YAMLTrak',
       version=version,
       description="YAMLTrak ('yt is on top of hg'), the issue tracker that uses mercurial as a database",
       long_description="""\
@@ -45,7 +66,7 @@ setup(name='YAMLTrak',
       author_email='douglas.mayle.org',
       url='http://douglas.mayle.org',
       license='LGPLv3',
-      packages=find_packages(exclude=['ez_setup', 'examples', 'tests']),
+      packages=['yamltrak'],
       include_package_data=True,
       zip_safe=True,
       install_requires=[
@@ -55,9 +76,5 @@ setup(name='YAMLTrak',
           "Mercurial>=1.2",
           "termcolor==0.1.1",
       ],
-      entry_points="""
-      # -*- Entry points: -*-
-        [console_scripts]
-        yt=yamltrak.commands:main
-      """,
+      scripts=['scripts/yt'],
       )
