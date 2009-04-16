@@ -21,7 +21,7 @@ import os
 from argparse import ArgumentParser
 from yamltrak import IssueDB, NoRepository, NoIssueDB, init, issues as issues_command, relatedissues
 
-def guess_ticket_id(repository):
+def guess_issue_id(repository):
     try:
         issues = issues_command([repository])[os.path.basename(repository)]
     except KeyError:
@@ -64,7 +64,7 @@ def unpack_add(issuedb, repository, args):
             issue[field] = skeleton_add[field]
 
     newid = issuedb.add(issue=issue)
-    print 'Added ticket: %s' % newid
+    print 'Added issue: %s' % newid
 
 def unpack_list(issuedb, repository, args):
     issues = issuedb.issues(status=args.status)
@@ -100,7 +100,7 @@ def unpack_list(issuedb, repository, args):
 
 def unpack_edit(issuedb, repository, args):
     if not args.id:
-        args.id = guess_ticket_id(repository)
+        args.id = guess_issue_id(repository)
     skeleton = issuedb.skeleton
     issue = issuedb.issue(id=args.id, detail=False)[0]['data']
     newissue = {}
@@ -110,11 +110,11 @@ def unpack_edit(issuedb, repository, args):
 
 def unpack_show(issuedb, repository, args):
     if not args.id:
-        args.id = guess_ticket_id(repository)
+        args.id = guess_issue_id(repository)
 
     issuedata = issuedb.issue(id=args.id, detail=args.detail)
     if not issuedata or not issuedata[0].get('data'):
-        print 'No such ticket found'
+        print 'No such issue found'
         return
     issue = issuedata[0]['data']
     print '\nIssue: %s' % args.id
@@ -184,7 +184,7 @@ def unpack_init(issuedb, repository, args):
 
 def unpack_close(issuedb, repository, args):
     if not args.id:
-        args.id = guess_ticket_id(repository)
+        args.id = guess_issue_id(repository)
     issue = issuedb.issue(id=args.id, detail=False)[0]['data']
     issue['status'] = 'closed'
     issuedb.edit(id=args.id, issue=issue)
@@ -261,7 +261,7 @@ def main():
                                         "issue.")
     parser_show.set_defaults(func=unpack_show)
     parser_show.add_argument('-d', '--detail', default=False, action='store_true',
-        help='Show a detailed view of the ticket')
+        help='Show a detailed view of the issue')
     parser_show.add_argument('id', nargs='?',
         help='The issue id to show the details for.')
 
@@ -273,7 +273,7 @@ def main():
         default=[],
         help='List the open issues related to these files.  If no files are '
         'supplied, and the list of currently uncommitted files (excluding '
-        'tickets) will be checked.')
+        'issues) will be checked.')
 
     # Initialize DV
     parser_init = subparsers.add_parser('init', help="Initialize issue "

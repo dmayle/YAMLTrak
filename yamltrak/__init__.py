@@ -26,7 +26,26 @@ from mercurial.error import RepoError
 from os import path, makedirs
 from time import time
 import exceptions
-NEW_TICKET_TAG='YAMLTrak-new-ticket'
+NEW_ISSUE_TAG='YAMLTrak-new-issue'
+SKELETON = {
+    'title': 'A title for the issue',
+    'description': 'A detailed description of this issue.',
+    'estimate': 'A time estimate for completion',
+    'status': 'open, closed',
+    'group': 'unfiled',
+    'priority': 'high, normal, low',
+    'comment': 'The current comment on this issue.'}
+SKELETON_ADD = {
+    'title': 'A title for the issue',
+    'description': 'A detailed description of this issue.',
+    'estimate': 'A time estimate for completion'}
+INDEX = {'skeleton': {
+    'title': 'A title for the issue',
+    'description': 'A detailed description of this issue.',
+    'estimate': 'A time estimate for completion',
+    'status': 'open, closed',
+    'group': 'unfiled',
+    'priority': 'high, normal, low'}}
 
 def issues(repositories=[], dbfolder='issues', status='open'):
     """Return the list of issues with the given statuses in dictionary form"""
@@ -170,25 +189,6 @@ def init(repository, dbfolder='issues'):
         makedirs(path.join(repository, dbfolder))
     except OSError:
         pass
-    SKELETON = {
-        'title': 'A title for the ticket',
-        'description': 'A detailed description of this ticket.',
-        'estimate': 'A time estimate for completion',
-        'status': 'open, closed',
-        'group': 'unfiled',
-        'priority': 'high, normal, low',
-        'comment': 'The current comment on this ticket.'}
-    SKELETON_ADD = {
-        'title': 'A title for the ticket',
-        'description': 'A detailed description of this ticket.',
-        'estimate': 'A time estimate for completion'}
-    INDEX = {'skeleton': {
-        'title': 'A title for the ticket',
-        'description': 'A detailed description of this ticket.',
-        'estimate': 'A time estimate for completion',
-        'status': 'open, closed',
-        'group': 'unfiled',
-        'priority': 'high, normal, low'}}
     with open(path.join(repository, dbfolder, 'skeleton'), 'w') as skeletonfile:
         skeletonfile.write(yaml.dump(SKELETON, default_flow_style=False))
     with open(path.join(repository, dbfolder, 'skeleton_add'), 'w') as skeletonfile:
@@ -233,17 +233,17 @@ def close(repository, id, dbfolder='issues'):
     except IOError:
         return false
 
-def purge(repository, ticketid, dbfolder='issues', status=['open']):
-    # This just deletes the ticket, we should keep them around temporarily and call it fixed.
+def purge(repository, issueid, dbfolder='issues', status=['open']):
+    # This just deletes the issue, we should keep them around temporarily and call it fixed.
     return True
     myui = ui.ui()
     repo = hg.repository(myui, repository)
-    hgcommands.remove(myui, repo, path.join(repository, dbfolder, ticketid))
+    hgcommands.remove(myui, repo, path.join(repository, dbfolder, issueid))
     try:
         with open(path.join(repository, dbfolder, 'issues.yaml'), 'r') as indexfile:
             issues = yaml.load(indexfile.read())
         with open(path.join(repository, dbfolder, 'issues.yaml'), 'w') as indexfile:
-            del issues[ticketid]
+            del issues[issueid]
             indexfile.write(yaml.safe_dump(issues, default_flow_style=False))
     except IOError:
         return false
@@ -306,7 +306,7 @@ def burndown(repository, groupname, dbfolder='issues'):
             try:
                 issues = yaml.safe_load(filectxt.data())
             except yaml.loader.ScannerError:
-                # We have to protect from invalid ticket data in the repository
+                # We have to protect from invalid issue data in the repository
                 filerevid = filectxt.filerev() - 1
                 if filerevid < 0:
                     break
@@ -359,7 +359,7 @@ class IssueDB(object):
     parameters. In addition, it caches some of the work performed so that
     multiple operations run faster.
     """
-    def __init__(self, folder, dbfolder='issues', indexfile='issues.yaml'):
+    def __init__(self, folder, dbfolder='issues', indexfile='issues.yaml', init=False):
         self.dbfolder = dbfolder
         self.__indexfile = indexfile
         self.__skeletonfile = 'skeleton'
@@ -451,9 +451,8 @@ class IssueDB(object):
     def issue(self, id, detail=True):
         """\
         Return detailed information about the issue requested.  If detail is
-        set to True, then return a ticket history as well, including
-        changesets, associating files, the committing user, changeset node, and
-        date.
+        set to True, then return a issue history as well, including changesets,
+        associating files, the committing user, changeset node, and date.
         """
 
         # Use revision to walk backwards intelligently.
@@ -482,7 +481,7 @@ class IssueDB(object):
                 try:
                     newrev = yaml.safe_load(filectxt.data())
                 except yaml.loader.ScannerError:
-                    # We have to protect from invalid ticket data in the repository
+                    # We have to protect from invalid issue data in the repository
                     filerevid = filectxt.filerev() - 1
                     if filerevid < 0:
                         break
@@ -546,22 +545,22 @@ class IssueDB(object):
         if 'status' not in addissue:
             addissue['status'] = status
         if 'comment' not in addissue:
-            addissue['comment'] = 'Opening ticket'
+            addissue['comment'] = 'Opening issue'
 
         # This can fail in an empty repository.  Handle this
-        hgcommands.tag(self.ui, self.repo, NEW_TICKET_TAG, force=True, message='TICKETPREP: %s' % addissue.get('title', 'No ticket title'))
+        hgcommands.tag(self.ui, self.repo, NEW_ISSUE_TAG, force=True, message='ISSUEPREP: %s' % addissue.get('title', 'No issue title'))
         context = self.repo['tip']
-        ticketid = _hex_node(context.node())
+        issueid = _hex_node(context.node())
         try:
-            with open(path.join(self.root, self.dbfolder, ticketid), 'w') as issuefile:
+            with open(path.join(self.root, self.dbfolder, issueid), 'w') as issuefile:
                 issuefile.write(yaml.safe_dump(addissue, default_flow_style=False))
-            hgcommands.add(self.ui, self.repo, path.join(self.root, self.dbfolder, ticketid))
+            hgcommands.add(self.ui, self.repo, path.join(self.root, self.dbfolder, issueid))
         except IOError:
             return false
 
         # Poor man's code reuse.  Since I haven't yet factored out the index
         # updating, I'll just call edit without any values.
-        return self.edit(id=ticketid, issue={}) and ticketid
+        return self.edit(id=issueid, issue={}) and issueid
 
     def edit(self, id=None, issue=None):
         """\
