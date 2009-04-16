@@ -41,7 +41,7 @@ def hybrid_setup(**kwargs):
             # Someone used easy_install to run this.  I really want the correcy
             # script installed.
             from subprocess import Popen
-            child = Popen([sys.executable] + sys.srgv)
+            child = Popen([sys.executable] + sys.argv)
             exit_code = child.wait()
             return exit_code
         else:
