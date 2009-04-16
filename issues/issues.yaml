@@ -39,6 +39,15 @@
   estimate: 2 Hours
   status: closed
   title: Do a better job of indexing and linking to multiple repositories
+48b61ccb4406986ba76e173d8b15f42a0ac3168f:
+  comment: The current comment on this ticket.
+  description: Command line tickets have a sentence for their default status, which
+    means they dont show up as being open, a bad precedent.
+  estimate: 1 Hour
+  group: unfiled
+  priority: high, normal, low
+  status: open
+  title: Command line does not default to open tickets.
 573813ecb040bbb604e5561d8f2a639a2eb17652:
   description: Add a revert button and maybe a Preview background to uncommitted tickets
   estimate: 1 hour
