@@ -24,6 +24,8 @@ def hybrid_setup(**kwargs):
     # In a hybrid approach, we don't want setuptools handling script install,
     # unless on windows, as pkg_resource scans have too much overhead.
     if sys.platform != 'win32':
+        print '%r' % sys.argv
+        import pdb; pdb.set_trace()
         # On most platforms, we'll use both approaches.
         if sys.argv[-1] == 'develop':
             sys.argv[-1] = 'install'
