@@ -1,0 +1,8 @@
+comment: The current comment on this ticket.
+description: Having any modified tickets in issues.yaml means that all open tickets
+  show up in the related list.  This is bad.
+estimate: 1 Hour
+group: unfiled
+priority: high, normal, low
+status: open
+title: Related tickets should filter out issues.yaml

@@ -15,6 +15,15 @@
   estimate: 1 Day
   status: closed
   title: Add support for editing an issue
+211c754fa3f242d33c4728b913db3d79c951c4f1:
+  comment: The current comment on this ticket.
+  description: Having any modified tickets in issues.yaml means that all open tickets
+    show up in the related list.  This is bad.
+  estimate: 1 Hour
+  group: unfiled
+  priority: high, normal, low
+  status: open
+  title: Related tickets should filter out issues.yaml
 2746c65b91face823331c36b7a6725aa2ad02fdf:
   description: We should add a -r --related command line switch.  When a ticket id
     is required, but not supplied, it looks up tickets related to the uncommitted
