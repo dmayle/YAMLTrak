@@ -25,22 +25,23 @@ from mercurial import hg, commands as hgcommands, ui, util
 from mercurial.error import RepoError
 from os import path, makedirs
 from time import time
+import exceptions
 NEW_TICKET_TAG='YAMLTrak-new-ticket'
 
 def issues(repositories=[], dbfolder='issues', status='open'):
     """Return the list of issues with the given statuses in dictionary form"""
     issues = {}
-    for repo in repositories:
+    for repository in repositories:
         try:
             issuedb = IssueDB(repository, dbfolder=dbfolder)
-        except LookupError:
+        except NoRepository:
             # No repo found
             return None
-        except UnboundLocalError:
+        except NoIssueDB:
             # No issue database
             return None
 
-        issues[path.basename(isseudb.root)] = issuedb.issues(status)
+        issues[path.basename(issuedb.root)] = issuedb.issues(status)
 
     return issues
 
@@ -83,47 +84,22 @@ def edit_issue(repository=None, dbfolder='issues', issue=None, id=None):
     """Modify the copy of the issue on disk, both in it's file, and the index."""
     try:
         issuedb = IssueDB(repository, dbfolder=dbfolder)
-    except LookupError:
+    except NoRepository:
         # No repo found
         return None
-    except UnboundLocalError:
+    except NoIssueDB:
         # No issue database
         return None
 
-    issuedb.edit(issue=issue, id=id)
-    return
-
-    if not issue or not id:
-        return
-    try:
-        with open(path.join(repository, dbfolder, id), 'w') as issuefile:
-            issuefile.write(yaml.safe_dump(issue, default_flow_style=False))
-    except IOError:
-        return false
-
-    try:
-        with open(path.join(repository, dbfolder, 'issues.yaml'), 'r') as indexfile:
-            index = yaml.load(indexfile.read())
-
-        # We only write out the properties listed in the skeleton to the index.
-        indexissue = {}
-        for key in index['skeleton']:
-            if key in issue:
-                indexissue[key] = issue[key]
-        index[id] = indexissue
-
-        with open(path.join(repository, dbfolder, 'issues.yaml'), 'w') as indexfile:
-            indexfile.write(yaml.safe_dump(index, default_flow_style=False))
-    except IOError:
-        return false
+    return issuedb.edit(issue=issue, id=id)
 
 def issue(repository=None, dbfolder='issues', id=None, detail=True):
     try:
         issuedb = IssueDB(repository, dbfolder=dbfolder)
-    except LookupError:
+    except NoRepository:
         # No repo found
         return None
-    except UnboundLocalError:
+    except NoIssueDB:
         # No issue database
         return None
 
@@ -217,7 +193,7 @@ def init(repository, dbfolder='issues'):
         'group': 'unfiled',
         'priority': 'high, normal, low',
         'comment': 'The current comment on this ticket.'}
-    ADDSKELETON = {
+    SKELETON_ADD = {
         'title': 'A title for the ticket',
         'description': 'A detailed description of this ticket.',
         'estimate': 'A time estimate for completion'}
@@ -230,14 +206,14 @@ def init(repository, dbfolder='issues'):
         'priority': 'high, normal, low'}}
     with open(path.join(repository, dbfolder, 'skeleton'), 'w') as skeletonfile:
         skeletonfile.write(yaml.dump(SKELETON, default_flow_style=False))
-    with open(path.join(repository, dbfolder, 'newticket'), 'w') as skeletonfile:
-        skeletonfile.write(yaml.dump(ADDSKELETON, default_flow_style=False))
+    with open(path.join(repository, dbfolder, 'skeleton_add'), 'w') as skeletonfile:
+        skeletonfile.write(yaml.dump(SKELETON_ADD, default_flow_style=False))
     with open(path.join(repository, dbfolder, 'issues.yaml'), 'w') as skeletonfile:
         skeletonfile.write(yaml.dump(INDEX, default_flow_style=False))
     myui = ui.ui()
     repo = hg.repository(myui, repository)
     hgcommands.add(myui, repo, path.join(repository, dbfolder, 'skeleton'))
-    hgcommands.add(myui, repo, path.join(repository, dbfolder, 'newticket'))
+    hgcommands.add(myui, repo, path.join(repository, dbfolder, 'skeleton_add'))
     hgcommands.add(myui, repo, path.join(repository, dbfolder, 'issues.yaml'))
 
 def close(repository, id, dbfolder='issues'):
@@ -373,6 +349,19 @@ def burndown(repository, groupname, dbfolder='issues'):
 
     return checkpoints
 
+class NoRepository(Exception):
+    def __init__(self, repository):
+        self.repository = repository
+    def __str__(self):
+        return 'No repository found at: %s' % self.repository
+
+class NoIssueDB(Exception):
+    def __init__(self, repository):
+        self.repository = repository
+    def __str__(self):
+        return 'No issue database found in: %s' % self.repository
+
+
 class IssueDB(object):
     """\
     An object that represents an issue database.  This provides a simpler means
@@ -382,25 +371,43 @@ class IssueDB(object):
     """
     def __init__(self, folder, dbfolder='issues', indexfile='issues.yaml'):
         self.dbfolder = dbfolder
-        self.indexfile = indexfile
+        self.__indexfile = indexfile
+        self.__skeletonfile = 'skeleton'
+        self.__skeleton_addfile = 'skeleton_add'
 
         # If we ever do a lookup on the skeleton, we'll cache it for speed.
         self._skeleton = None
-        self._addskeleton = None
+        self._skeleton_add = None
         self.ui = ui.ui()
         try:
             self.repo = hg.repository(self.ui, folder)
         except (RepoError, util.Abort):
-            # I'm feeling lazy, so I think I'm gonna do this recursively with a
-            # maxdepth. For each subdirectory of the current, check to see if it's
-            # a repo.
-            raise LookupException
+            raise NoRepository(folder)
         self.root = self.repo.root
+
+        # We've got a valid repository, let's look for an issue database.
+        if not path.exists(self._indexfile) or not path.exists(self._skeletonfile):
+            raise NoIssueDB(self.root)
+        # Look for the old name
+        if not path.exists(self._skeleton_addfile):
+            self.__skeleton_addfile = 'newticket'
+        if not path.exists(self._skeleton_addfile):
+            raise NoIssueDB(self.root)
 
     @property
     def _indexfile(self):
         """Helper that returns the full path of the issues index file."""
-        return path.join(self.root, self.dbfolder, self.indexfile)
+        return path.join(self.root, self.dbfolder, self.__indexfile)
+
+    @property
+    def _skeletonfile(self):
+        """Helper that returns the full path of the issues skeleton file."""
+        return path.join(self.root, self.dbfolder, self.__skeletonfile)
+
+    @property
+    def _skeleton_addfile(self):
+        """Helper that returns the full path of the issues add skeleton file."""
+        return path.join(self.root, self.dbfolder, self.__skeleton_addfile)
 
     def issues(self, status='open'):
         issuedb = {}
@@ -467,7 +474,7 @@ class IssueDB(object):
                 return issue
 
             try:
-                filectxt = self.repo['tip'][path.join(dbfolder, id)]
+                filectxt = self.repo['tip'][path.join(self.dbfolder, id)]
             except LookupError:
                 # This issue hasn't been committed yet
                 return issue
@@ -512,38 +519,56 @@ class IssueDB(object):
     def skeleton(self):
         if self._skeleton:
             return self._skeleton
-        self._skeleton = self.issue('skeleton', detail=False)
+        self._skeleton = self.issue(self.__skeletonfile, detail=False)
+        if self._skeleton:
+            self._skeleton = self._skeleton[0]['data']
         return self._skeleton
 
     @property
-    def addskeleton(self):
-        if self._addskeleton:
-            return self._addskeleton
-        self._addskeleton = self.issue('newticket', detail=False)
-        return self._addskeleton
+    def skeleton_add(self):
+        if self._skeleton_add:
+            return self._skeleton_add
+        self._skeleton_add = self.issue(self.__skeleton_addfile, detail=False)
+        if self._skeleton_add:
+            self._skeleton_add = self._skeleton_add[0]['data']
+        return self._skeleton_add
 
     def edit(self, id=None, issue=None):
+        """\
+        Save the issue with the given id.  The issue must already exist in the
+        database.  Because we already filter using the skeleton, you can don't
+        have to worry that any unwanted fields will show up.
+        """
         if not issue or not id:
             return
-        # What!?! We should be using the skeleton here!
+
+        # We use the skeleton to filter any edits.
+        saveissue = {}
+        for field, default in self.skeleton.iteritems():
+            saveissue[field] = issue.get(field, default)
+            if saveissue[field] is None:
+                # I don't like null values in the database.
+                saveissue[field] = ''
+
         try:
             with open(path.join(self.root, self.dbfolder, id), 'w') as issuefile:
-                issuefile.write(yaml.safe_dump(issue, default_flow_style=False))
+                issuefile.write(yaml.safe_dump(saveissue, default_flow_style=False))
         except IOError:
             return false
 
         try:
+            # This is done pretty often, as well.  Abstract this out.
             with open(self._indexfile, 'r') as indexfile:
                 index = yaml.load(indexfile.read())
 
             # We only write out the properties listed in the skeleton to the index.
             indexissue = {}
-            for key in index['skeleton']:
-                if key in issue:
-                    indexissue[key] = issue[key]
+            for field in index['skeleton']:
+                if field in issue:
+                    indexissue[field] = issue[field]
             index[id] = indexissue
 
-            with open(path.join(self.root, dbfolder, 'issues.yaml'), 'w') as indexfile:
+            with open(path.join(self.root, self.dbfolder, 'issues.yaml'), 'w') as indexfile:
                 indexfile.write(yaml.safe_dump(index, default_flow_style=False))
         except IOError:
             return false

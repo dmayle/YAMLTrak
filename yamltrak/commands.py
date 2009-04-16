@@ -19,7 +19,7 @@ from termcolor import colored
 from mercurial import hg, ui
 import os
 from argparse import ArgumentParser
-from yamltrak import IssueDB, edit_issue
+from yamltrak import IssueDB, NoRepository, NoIssueDB, init
 
 def guess_ticket_id(repository):
     try:
@@ -55,7 +55,7 @@ def guess_ticket_id(repository):
     return found.keys()[0]
 
 def unpack_add(issuedb, repository, args):
-    skeleton = issuedb.skeleton[0]['data']
+    skeleton = issuedb.skeleton
     issue = {}
     for field in skeleton:
         issue[field] = getattr(args, field, None) or skeleton[field]
@@ -97,12 +97,12 @@ def unpack_list(issuedb, repository, args):
 def unpack_edit(issuedb, repository, args):
     if not args.id:
         args.id = guess_ticket_id(repository)
-    skeleton = issuedb.skeleton[0]['data']
+    skeleton = issuedb.skeleton
     issue = issuedb.issue(id=args.id, detail=False)[0]['data']
     newissue = {}
     for field in skeleton:
         newissue[field] = getattr(args, field, None) or issue.get(field, skeleton[field])
-    edit_issue(repository, id=args.id, issue=newissue)
+    issuedb.edit(id=args.id, issue=newissue)
 
 def unpack_show(issuedb, repository, args):
     if not args.id:
@@ -181,14 +181,9 @@ def unpack_init(issuedb, repository, args):
 def unpack_close(issuedb, repository, args):
     if not args.id:
         args.id = guess_ticket_id(repository)
-    skeleton = issuedb.skeleton[0]['data']
     issue = issuedb.issue(id=args.id, detail=False)[0]['data']
-    newissue = {}
-    for field in skeleton:
-        newissue[field] = issue.get(field, skeleton[field])
-    newissue['status'] = 'closed'
-    edit_issue(repository, id=args.id, issue=newissue)
-    pass
+    issue['status'] = 'closed'
+    issuedb.edit(id=args.id, issue=issue)
 
 def unpack_purge(issuedb, repository, args):
     pass
@@ -203,12 +198,12 @@ def main():
     here = os.getcwd()
     try:
         issuedb = IssueDB(os.getcwd())
-    except LookupError:
+    except NoRepository:
         # This means that there was no repository here.
         print 'Unable to find a repository.'
         import sys
         sys.exit(1)
-    except NameError:
+    except NoIssueDB:
         # This means no issue database was found.  We give the option to
         # initialize one.
         parser = ArgumentParser(prog='yt', description='YAMLTrak is a distributed version controlled issue tracker.')
@@ -217,17 +212,13 @@ def main():
                                             "database.")
         parser_init.set_defaults(func=unpack_init)
         args = parser.parse_args()
-        args.func(issuedb, issuedb.root, args)
+        # We don't have a valid database, so we call with none.  I suspect this
+        # may just change to calling issuedb with an init parameter.
+        args.func(None, os.getcwd(), args)
         return
 
     skeleton = issuedb.skeleton
-    addskeleton = issuedb.addskeleton
-
-    skeleton = skeleton[0]['data']
-    if addskeleton:
-        addskeleton = addskeleton[0]['data']
-    else:
-        addskeleton = {}
+    skeleton_add = issuedb.skeleton_add
 
     parser = ArgumentParser(prog='yt', description='YAMLTrak is a distributed version controlled issue tracker.')
     # parser.add_argument('-r', '--repository',
@@ -242,9 +233,9 @@ def main():
     parser_add = subparsers.add_parser('add', help="Add an issue.")
     parser_add.set_defaults(func=unpack_add)
     for field, help in skeleton.iteritems():
-        if field not in addskeleton:
+        if field not in skeleton_add:
             parser_add.add_argument('-' + field[0], '--' + field, help=help)
-    for field, help in addskeleton.iteritems():
+    for field, help in skeleton_add.iteritems():
         parser_add.add_argument('-' + field[0], '--' + field, required=True, help=skeleton[field])
     #parser_add.add_argument(
 
