@@ -37,6 +37,13 @@ def hybrid_setup(**kwargs):
 
             from setuptools import setup as stools_setup
             stools_setup(**kwargs)
+        elif 'setuptools' in sys.modules:
+            # Someone used easy_install to run this.  I really want the correcy
+            # script installed.
+            from subprocess import Popen
+            child = Popen([sys.executable] + sys.srgv)
+            exit_code = child.wait()
+            return exit_code
         else:
             dutils_setup(**kwargs)
 
