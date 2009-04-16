@@ -14,7 +14,6 @@
 
 # You should have received a copy of the GNU General Public License
 # along with YAMLTrak.  If not, see <http://www.gnu.org/licenses/>.
-import yamltrak
 import textwrap
 from termcolor import colored
 from mercurial import hg, ui
@@ -23,7 +22,7 @@ from argparse import ArgumentParser
 
 def guess_ticket_id(repository):
     try:
-        issues = yamltrak.issues([repository])[os.path.basename(repository)]
+        issues = issues([repository])[os.path.basename(repository)]
     except KeyError:
         # There is no issue database, or maybe just no open issues...
         print 'No open issues found'
@@ -37,7 +36,7 @@ def guess_ticket_id(repository):
     files = modified + added
     found = {}
     for filename in files:
-        relatedissues = yamltrak.relatedissues(repository, filename=filename, ids=issues.keys())
+        relatedissues = relatedissues(repository, filename=filename, ids=issues.keys())
         for issueid in relatedissues:
             found[issueid] = issues[issueid].get('title', '')
 
@@ -54,16 +53,16 @@ def guess_ticket_id(repository):
         sys.exit(1)
     return found.keys()[0]
 
-def unpack_add(repository, args):
-    skeleton = yamltrak.issue(repository, 'issues', id='skeleton', detail=False)[0]['data']
+def unpack_add(issuedb, repository, args):
+    skeleton = issuedb.issue(id='skeleton', detail=False)[0]['data']
     issue = {}
     for field in skeleton:
         issue[field] = getattr(args, field, None) or skeleton[field]
-    newid = yamltrak.add(repository, issue=issue)
+    newid = add(repository, issue=issue)
     print 'Added ticket: %s' % newid
 
-def unpack_list(repository, args):
-    allissues = yamltrak.issues([repository], status=args.status)
+def unpack_list(issuedb, repository, args):
+    allissues = issues([repository], status=args.status)
     for issuedb in allissues.itervalues():
         for id, issue in issuedb.iteritems():
             # Try to use color for clearer output
@@ -95,20 +94,21 @@ def unpack_list(repository, args):
             print colored(textwrap.fill(issue.get('estimate',{}).get('text',''),
                 initial_indent=indent, subsequent_indent=indent), color)
 
-def unpack_edit(repository, args):
+def unpack_edit(issuedb, repository, args):
     if not args.id:
         args.id = guess_ticket_id(repository)
-    skeleton = yamltrak.issue(repository, 'issues', id='skeleton', detail=False)[0]['data']
-    issue = yamltrak.issue(repository, 'issues', id=args.id, detail=False)[0]['data']
+    skeleton = issuedb.issue(id='skeleton', detail=False)[0]['data']
+    issue = issuedb.issue(id=args.id, detail=False)[0]['data']
     newissue = {}
     for field in skeleton:
         newissue[field] = getattr(args, field, None) or issue.get(field, skeleton[field])
-    yamltrak.edit_issue(repository, id=args.id, issue=newissue)
+    edit_issue(repository, id=args.id, issue=newissue)
 
-def unpack_show(repository, args):
+def unpack_show(issuedb, repository, args):
     if not args.id:
         args.id = guess_ticket_id(repository)
-    issuedata = yamltrak.issue(repository, id=args.id, detail=args.detail)
+
+    issuedata = issuedb.issue(id=args.id, detail=args.detail)
     if not issuedata or not issuedata[0].get('data'):
         print 'No such ticket found'
         return
@@ -151,9 +151,9 @@ def unpack_show(repository, args):
                 print 'Changed: %s - %s' % (changeset[0].upper(), changeset[1][1])
 
 
-def unpack_related(repository, args):
+def unpack_related(issuedb, repository, args):
     try:
-        issues = yamltrak.issues([repository])[os.path.basename(repository)]
+        issues = issues([repository])[os.path.basename(repository)]
     except KeyError:
         # There is no issue database, or maybe just no open issues...
         print 'No open issues found'
@@ -165,7 +165,7 @@ def unpack_related(repository, args):
         modified, added = repo.status()[:2]
         args.files = modified + added
     for filename in args.files:
-        relatedissues = yamltrak.relatedissues(repository, filename=filename, ids=issues.keys())
+        relatedissues = relatedissues(repository, filename=filename, ids=issues.keys())
         color = None
         print colored('File: %s' % filename, color, attrs=['reverse'])
         for issueid in relatedissues:
@@ -174,26 +174,26 @@ def unpack_related(repository, args):
             print colored(textwrap.fill(issues[issueid].get('title', '').upper(),
                 initial_indent='    ', subsequent_indent='    '), color, attrs=[])
 
-def unpack_init(repository, args):
-    yamltrak.init(repository)
+def unpack_init(issuedb, repository, args):
+    init(repository)
     print 'Initialized repository'
 
-def unpack_close(repository, args):
+def unpack_close(issuedb, repository, args):
     if not args.id:
         args.id = guess_ticket_id(repository)
-    skeleton = yamltrak.issue(repository, 'issues', id='skeleton', detail=False)[0]['data']
-    issue = yamltrak.issue(repository, 'issues', id=args.id, detail=False)[0]['data']
+    skeleton = issuedb.issue(id='skeleton', detail=False)[0]['data']
+    issue = issuedb.issue(id=args.id, detail=False)[0]['data']
     newissue = {}
     for field in skeleton:
         newissue[field] = issue.get(field, skeleton[field])
     newissue['status'] = 'closed'
-    yamltrak.edit_issue(repository, id=args.id, issue=newissue)
+    edit_issue(repository, id=args.id, issue=newissue)
     pass
 
-def unpack_purge(repository, args):
+def unpack_purge(issuedb, repository, args):
     pass
 
-def unpack_burndown(repository, args):
+def unpack_burndown(issuedb, repository, args):
     pass
 
 def main():
@@ -201,18 +201,28 @@ def main():
     # We need to attempt to initialize a repo, and if it works, use the repo
     # root instead of 'here'
     here = os.getcwd()
-    skeleton = yamltrak.issue(here, 'issues', 'skeleton', detail=False)
-    newticket = yamltrak.issue(here, 'issues', 'newticket', detail=False)
-    if not skeleton:
-        # If we're not in a repository, the only option we support is db init.
+    try:
+        issuedb = IssueDB(os.getcwd())
+    except LookupException:
+        # This means that there was no repository here.
+        print 'Unable to find a repository.'
+        import sys
+        sys.exit(1)
+    except Exception:
+        # This means no issue database was found.  We give the option to
+        # initialize one.
         parser = ArgumentParser(prog='yt', description='YAMLTrak is a distributed version controlled issue tracker.')
         subparsers = parser.add_subparsers(help=None, dest='command')
         parser_init = subparsers.add_parser('init', help="Initialize issue "
                                             "database.")
         parser_init.set_defaults(func=unpack_init)
         args = parser.parse_args()
-        args.func(here, args)
+        args.func(issuedb, issuedb.root(), args)
         return
+
+    skeleton = issuedb.issue('skeleton', detail=False)
+    newticket = issuedb.issue('newticket', detail=False)
+
     skeleton = skeleton[0]['data']
     if newticket:
         newticket = newticket[0]['data']

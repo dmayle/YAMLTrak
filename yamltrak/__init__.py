@@ -22,6 +22,7 @@
 from __future__ import with_statement
 import yaml
 from mercurial import hg, commands as hgcommands, ui, util
+from mercurial.error import RepoError
 from os import path, makedirs
 from time import time
 NEW_TICKET_TAG='YAMLTrak-new-ticket'
@@ -137,57 +138,17 @@ def edit_issue(repository=None, dbfolder='issues', issue=None, id=None):
         return false
 
 def issue(repository=None, dbfolder='issues', id=None, detail=True):
-    # Use revision to walk backwards intelligently.
-    # Change this to only accept one repository and to return a history
-    issue = None
     try:
-        with open(path.join(repository, dbfolder, id)) as issuefile:
-            issue = [{'data':yaml.safe_load(issuefile.read())}]
-        if not detail:
-            return issue
-        myui = ui.ui()
-        repo = hg.repository(myui, repository)
-        try:
-            filectxt = repo['tip'][path.join(dbfolder, id)]
-        except LookupError:
-            # This issue hasn't been committed yet
-            return issue
-        filerevid = filectxt.filerev()
+        issuedb = IssueDB(repository, dbfolder=dbfolder)
+    except LookupException:
+        # No repo found
+        return None
+    except Exception:
+        # No issue database
+        return None
 
-        # By default, we're working with the context of tip.  Update to the
-        # context from the latest revision.
-        filectxt = filectxt.filectx(filerevid)
-        oldrev = issue[0]['data']
+    return issuedb.issue(id, detail=detail)
 
-        while True:
-            try:
-                newrev = yaml.safe_load(filectxt.data())
-            except yaml.loader.ScannerError:
-                # We have to protect from invalid ticket data in the repository
-                filerevid = filectxt.filerev() - 1
-                if filerevid < 0:
-                    break
-                filectxt = filectxt.filectx(filerevid)
-                continue
-
-            issue[-1]['diff'] = issuediff(newrev, oldrev)
-            issue.append({'data': newrev,
-                          'user': filectxt.user(),
-                          'date': util.datestr(filectxt.date()),
-                          'files': filectxt.files(),
-                          'node': _hex_node(filectxt.node())})
-            filerevid = filectxt.filerev() - 1
-            if filerevid < 0:
-                break
-            filectxt = filectxt.filectx(filerevid)
-            oldrev = newrev
-    except IOError:
-        # Not all listed repositories have an issue tracking database, nor
-        # do they contain this particular issue.  This needs to be changed
-        # to specify the repo specifically
-        return
-
-    return issue
 
 def relatedissues(repository=None, dbfolder='issues', filename=None, ids=None):
     # Use revision to walk backwards intelligently.
@@ -431,3 +392,103 @@ def burndown(repository, groupname, dbfolder='issues'):
         return []
 
     return checkpoints
+
+class IssuesDB(object):
+    """\
+    An object that represents an issue database.  This provides a simpler means
+    of accessing the YAMLTrak API than constantly passing in all of the
+    parameters. In addition, it caches some of the work performed so that
+    multiple operations run faster.
+    """
+    def __init__(self, folder, dbfolder='issues'):
+        self.dbfolder = dbfolder
+
+        # If we ever do a lookup on the skeleton, we'll cache it for speed.
+        self.skeleton = None
+        self.ui = ui.ui()
+        try:
+            self.repo = hg.repository(self.ui, folder)
+        except (RepoError, util.Abort):
+            # I'm feeling lazy, so I think I'm gonna do this recursively with a
+            # maxdepth. For each subdirectory of the current, check to see if it's
+            # a repo.
+            raise LookupException
+        self.root = self.repo.root
+
+    def root(self):
+        return self.root
+
+    def issue(self, id, detail=True):
+        """\
+        Return detailed information about the issue requested.  If detail is
+        set to True, then return a ticket history as well, including
+        changesets, associating files, the committing user, changeset node, and
+        date.
+        """
+
+        # I suspect that we may have need of an issue skeleton many times while
+        # using this object, so I'll cache it if it's retreived.  The same is
+        # true of the newticket filter.
+        if 'skeleton' == id and self.skeleton and not detail:
+            return skeleton
+
+        if 'newticket' == id and self.newticket and not detail:
+            return newticket
+
+        # Use revision to walk backwards intelligently.
+        # Change this to only accept one repository and to return a history
+        issue = None
+        try:
+            with open(path.join(self.root, self.dbfolder, id)) as issuefile:
+                issue = [{'data':yaml.safe_load(issuefile.read())}]
+
+            # Cache the magic tickets
+            if 'skeleton' == id:
+                self.skeleton = issue
+            elif 'newticket' == id:
+                self.newticket = issue
+
+            if not detail:
+                return issue
+
+            try:
+                filectxt = self.repo['tip'][path.join(dbfolder, id)]
+            except LookupError:
+                # This issue hasn't been committed yet
+                return issue
+            filerevid = filectxt.filerev()
+
+            # By default, we're working with the context of tip.  Update to the
+            # context from the latest revision.
+            filectxt = filectxt.filectx(filerevid)
+            oldrev = issue[0]['data']
+
+            while True:
+                try:
+                    newrev = yaml.safe_load(filectxt.data())
+                except yaml.loader.ScannerError:
+                    # We have to protect from invalid ticket data in the repository
+                    filerevid = filectxt.filerev() - 1
+                    if filerevid < 0:
+                        break
+                    filectxt = filectxt.filectx(filerevid)
+                    continue
+
+                issue[-1]['diff'] = issuediff(newrev, oldrev)
+                issue.append({'data': newrev,
+                              'user': filectxt.user(),
+                              'date': util.datestr(filectxt.date()),
+                              'files': filectxt.files(),
+                              'node': _hex_node(filectxt.node())})
+                filerevid = filectxt.filerev() - 1
+                if filerevid < 0:
+                    break
+                filectxt = filectxt.filectx(filerevid)
+                oldrev = newrev
+        except IOError:
+            # Not all listed repositories have an issue tracking database, nor
+            # do they contain this particular issue.  This needs to be changed
+            # to specify the repo specifically
+            return
+
+        return issue
