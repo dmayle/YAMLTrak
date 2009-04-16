@@ -34,9 +34,8 @@ def hybrid_setup(**kwargs):
 
         # Now that we've installed our script using distutils, we'll strip it
         # out of the arguments and call setuptools for the rest.
-        for key, value in kwargs.iteritems():
-            if key in ['scripts']:
-                del(kwargs[key])
+        if 'scripts' in kwargs:
+            del(kwargs[key])
 
     from setuptools import setup as stools_setup
     stools_setup(**kwargs)
