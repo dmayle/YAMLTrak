@@ -292,8 +292,11 @@ class IssueDB(object):
         if not path.exists(self._skeleton_addfile):
             self.__skeleton_addfile = 'newticket'
         if not path.exists(self._skeleton_addfile):
-            if init and self._init():
-                return
+            if init:
+                # If we don't do this here, we initialize with the wrong name.
+                self.__skeleton_addfile = 'skeleton_add'
+                if self._init():
+                    return
             raise NoIssueDB(self.root)
 
     def __find_repo(self, folder):

@@ -19,7 +19,7 @@ import sys
 from setuptools import setup
 
 
-version = '0.7'
+version = '0.6.1'
 
 # We monkeypatch setuptools to perform script installs the way distutils does.
 # Calling pkg_resources is too time intensive for a serious command line
