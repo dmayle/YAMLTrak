@@ -126,46 +126,16 @@ def issue(repository=None, dbfolder='issues', id=None, detail=True):
 
 
 def relatedissues(repository=None, dbfolder='issues', filename=None, ids=None):
-    # Use revision to walk backwards intelligently.
-    # Change this to only accept one repository and to return a history
-    issues = []
-    myui = ui.ui()
-    repo = hg.repository(myui, repository)
+    try:
+        issuedb = IssueDB(repository, dbfolder=dbfolder)
+    except NoRepository:
+        # No repo found
+        return []
+    except NoIssueDB:
+        # No issue database
+        return []
 
-    # Lookup into the status lists returned by repo.status()
-    # ['modified', 'added', 'removed', 'deleted', 'unknown', 'ignored', 'clean']
-    statuses = repo.status()
-    modified, added = statuses[:2]
-
-    for id in ids:
-        if path.join(dbfolder, id) in added or path.join(dbfolder, id) in modified:
-            # We consider all uncommitted issues to be related, since they
-            # would become related on commit.
-            issues.append(id)
-            continue
-
-        try:
-            filectxt = repo['tip'][path.join(dbfolder, id)]
-        except LookupError:
-            # This issue hasn't been committed yet
-            continue
-        filerevid = filectxt.filerev()
-
-        # By default, we're working with the context of tip.  Update to the
-        # context from the latest revision.
-        filectxt = filectxt.filectx(filerevid)
-
-        while True:
-            if filename in filectxt.files():
-                issues.append(id)
-                break
-
-            filerevid = filectxt.filerev() - 1
-            if filerevid < 0:
-                break
-            filectxt = filectxt.filectx(filerevid)
-
-    return issues
+    return issuedb.related([filename], ids=ids)
 
 def _hex_node(node_binary):
     """Convert a binary node string into a 40-digit hex string"""
@@ -186,20 +156,13 @@ def add(repository, issue, dbfolder='issues', status=['open']):
 
 def init(repository, dbfolder='issues'):
     try:
-        makedirs(path.join(repository, dbfolder))
-    except OSError:
-        pass
-    with open(path.join(repository, dbfolder, 'skeleton'), 'w') as skeletonfile:
-        skeletonfile.write(yaml.dump(SKELETON, default_flow_style=False))
-    with open(path.join(repository, dbfolder, 'skeleton_add'), 'w') as skeletonfile:
-        skeletonfile.write(yaml.dump(SKELETON_ADD, default_flow_style=False))
-    with open(path.join(repository, dbfolder, 'issues.yaml'), 'w') as skeletonfile:
-        skeletonfile.write(yaml.dump(INDEX, default_flow_style=False))
-    myui = ui.ui()
-    repo = hg.repository(myui, repository)
-    hgcommands.add(myui, repo, path.join(repository, dbfolder, 'skeleton'))
-    hgcommands.add(myui, repo, path.join(repository, dbfolder, 'skeleton_add'))
-    hgcommands.add(myui, repo, path.join(repository, dbfolder, 'issues.yaml'))
+        issuedb = IssueDB(repository, dbfolder=dbfolder, init=True)
+    except NoRepository:
+        # No repo found
+        return None
+    except NoIssueDB:
+        # No issue database
+        return None
 
 def close(repository, id, dbfolder='issues'):
     """Sets the status of the issue on disk to close, both in it's file, and the index."""
@@ -423,6 +386,50 @@ class IssueDB(object):
     def _skeleton_addfile(self):
         """Helper that returns the full path of the issues add skeleton file."""
         return path.join(self.root, self.dbfolder, self.__skeleton_addfile)
+
+    def related(self, filenames, ids=[]):
+        # Use revision to walk backwards intelligently.
+        # Change this to only accept one repository and to return a history
+        issues = []
+
+        # Lookup into the status lists returned by repo.status()
+        # ['modified', 'added', 'removed', 'deleted', 'unknown', 'ignored', 'clean']
+        statuses = self.repo.status()
+        modified, added = statuses[:2]
+
+        for id in ids:
+            if path.join(self.dbfolder, id) in added or path.join(self.dbfolder, id) in modified:
+                # We consider all uncommitted issues to be related, since they
+                # would become related on commit.
+                issues.append(id)
+                continue
+
+            try:
+                filectxt = self.repo['tip'][path.join(self.dbfolder, id)]
+            except LookupError:
+                # This issue hasn't been committed yet
+                continue
+            filerevid = filectxt.filerev()
+
+            # By default, we're working with the context of tip.  Update to the
+            # context from the latest revision.
+            filectxt = filectxt.filectx(filerevid)
+
+            try:
+                while True:
+                    for filename in filenames:
+                        if filename in filectxt.files():
+                            issues.append(id)
+                            raise StopIteration
+
+                    filerevid = filectxt.filerev() - 1
+                    if filerevid < 0:
+                        break
+                    filectxt = filectxt.filectx(filerevid)
+            except StopIteration:
+                pass
+
+        return issues
 
     def issues(self, status='open'):
         """\

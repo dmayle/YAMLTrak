@@ -21,7 +21,7 @@ import os
 from argparse import ArgumentParser
 from yamltrak import IssueDB, NoRepository, NoIssueDB, init, issues as issues_command, relatedissues as related_issues
 
-def guess_issue_id(repository):
+def guess_issue_id(issuedb, repository):
     try:
         issues = issues_command([repository])[os.path.basename(repository)]
     except KeyError:
@@ -100,7 +100,7 @@ def unpack_list(issuedb, repository, args):
 
 def unpack_edit(issuedb, repository, args):
     if not args.id:
-        args.id = guess_issue_id(repository)
+        args.id = guess_issue_id(issuedb, repository)
     skeleton = issuedb.skeleton
     issue = issuedb.issue(id=args.id, detail=False)[0]['data']
     newissue = {}
@@ -110,7 +110,7 @@ def unpack_edit(issuedb, repository, args):
 
 def unpack_show(issuedb, repository, args):
     if not args.id:
-        args.id = guess_issue_id(repository)
+        args.id = guess_issue_id(issuedb, repository)
 
     issuedata = issuedb.issue(id=args.id, detail=args.detail)
     if not issuedata or not issuedata[0].get('data'):
@@ -184,7 +184,7 @@ def unpack_init(issuedb, repository, args):
 
 def unpack_close(issuedb, repository, args):
     if not args.id:
-        args.id = guess_issue_id(repository)
+        args.id = guess_issue_id(issuedb, repository)
     issue = issuedb.issue(id=args.id, detail=False)[0]['data']
     issue['status'] = 'closed'
     issuedb.edit(id=args.id, issue=issue)
