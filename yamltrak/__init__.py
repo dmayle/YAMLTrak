@@ -333,7 +333,7 @@ class IssueDB(object):
         self._skeleton_add = None
         self.ui = ui.ui()
         try:
-            self.repo = hg.repository(self.ui, folder)
+            self.repo = self.__find_repo(folder)
         except (RepoError, util.Abort):
             raise NoRepository(folder)
         self.root = self.repo.root
@@ -350,6 +350,19 @@ class IssueDB(object):
             if init and self._init():
                 return
             raise NoIssueDB(self.root)
+
+    def __find_repo(self, folder):
+        checkrepo = folder
+        while checkrepo:
+            if path.exists(path.join(checkrepo, '.hg')):
+                try:
+                    return hg.repository(self.ui, checkrepo)
+                except (RepoError, util.Abort):
+                    raise NoRepository(folder)
+            root, tail = path.split(folder)
+            if root == checkrepo:
+                raise NoRepository(folder)
+            checkrepo = root
 
     def _init(self):
         """\
