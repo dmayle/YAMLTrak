@@ -19,7 +19,7 @@ from termcolor import colored
 from mercurial import hg, ui
 import os
 from argparse import ArgumentParser
-from yamltrak import IssueDB, NoRepository, NoIssueDB, init, issues as issues_command, relatedissues
+from yamltrak import IssueDB, NoRepository, NoIssueDB, init, issues as issues_command, relatedissues as related_issues
 
 def guess_issue_id(repository):
     try:
@@ -37,7 +37,7 @@ def guess_issue_id(repository):
     files = modified + added
     found = {}
     for filename in files:
-        relatedissues = relatedissues(repository, filename=filename, ids=issues.keys())
+        relatedissues = related_issues(repository, filename=filename, ids=issues.keys())
         for issueid in relatedissues:
             found[issueid] = issues[issueid].get('title', '')
 
@@ -157,7 +157,7 @@ def unpack_show(issuedb, repository, args):
 
 def unpack_related(issuedb, repository, args):
     try:
-        issues = issues([repository])[os.path.basename(repository)]
+        issues = issues_command([repository])[os.path.basename(repository)]
     except KeyError:
         # There is no issue database, or maybe just no open issues...
         print 'No open issues found'
@@ -169,7 +169,7 @@ def unpack_related(issuedb, repository, args):
         modified, added = repo.status()[:2]
         args.files = modified + added
     for filename in args.files:
-        relatedissues = relatedissues(repository, filename=filename, ids=issues.keys())
+        relatedissues = related_issues(repository, filename=filename, ids=issues.keys())
         color = None
         print colored('File: %s' % filename, color, attrs=['reverse'])
         for issueid in relatedissues:

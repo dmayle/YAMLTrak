@@ -377,12 +377,37 @@ class IssueDB(object):
 
         # We've got a valid repository, let's look for an issue database.
         if not path.exists(self._indexfile) or not path.exists(self._skeletonfile):
+            if init and self._init():
+                return
             raise NoIssueDB(self.root)
         # Look for the old name
         if not path.exists(self._skeleton_addfile):
             self.__skeleton_addfile = 'newticket'
         if not path.exists(self._skeleton_addfile):
+            if init and self._init():
+                return
             raise NoIssueDB(self.root)
+
+    def _init(self):
+        """\
+        Internal method for initializing the database.  It's not much use on
+        the outside, since you can't get an IssueDB object with an
+        uninitialized DB.
+        """
+        try:
+            makedirs(path.join(self.root, self.dbfolder))
+        except OSError:
+            pass
+        with open(self._skeletonfile, 'w') as skeletonfile:
+            skeletonfile.write(yaml.dump(SKELETON, default_flow_style=False))
+        with open(self._skeleton_addfile, 'w') as skeletonfile:
+            skeletonfile.write(yaml.dump(SKELETON_ADD, default_flow_style=False))
+        with open(self._indexfile, 'w') as skeletonfile:
+            skeletonfile.write(yaml.dump(INDEX, default_flow_style=False))
+        hgcommands.add(self.ui, self.repo, self._skeletonfile)
+        hgcommands.add(self.ui, self.repo, self._skeleton_addfile)
+        hgcommands.add(self.ui, self.repo, self.indexfile)
+        return true
 
     @property
     def _indexfile(self):
