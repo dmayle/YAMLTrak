@@ -1,0 +1,7 @@
+comment: Opening issue
+description: The status is a list, and not a text field
+estimate: 1 Hour
+group: unfiled
+priority: high, normal, low
+status: open
+title: New issues have bad status

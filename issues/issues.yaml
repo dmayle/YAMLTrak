@@ -152,6 +152,13 @@ bd1c5eaa87a31bcdf9b210f189322deab6e3e72d:
   estimate: 1 Day
   status: closed
   title: Add support for finding issues related to a file
+d1b0b062328d87962eb93705075f033b63ae103d:
+  description: The status is a list, and not a text field
+  estimate: 1 Hour
+  group: unfiled
+  priority: high, normal, low
+  status: open
+  title: New issues have bad status
 d2a36fe1efc5305f02e295063dc02cb3b21fe3ce:
   description: Create a command line interface, maybe with urwid, in two parts.  The
     yt command is standalone and offers a complete interface.  Also create an hg extension
