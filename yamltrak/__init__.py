@@ -332,10 +332,8 @@ class IssueDB(object):
         self._skeleton = None
         self._skeleton_add = None
         self.ui = ui.ui()
-        try:
-            self.repo = self.__find_repo(folder)
-        except (RepoError, util.Abort):
-            raise NoRepository(folder)
+
+        self.repo = self.__find_repo(folder)
         self.root = self.repo.root
 
         # We've got a valid repository, let's look for an issue database.

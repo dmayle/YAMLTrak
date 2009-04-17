@@ -1,8 +1,8 @@
-comment: The current comment on this ticket.
+comment: fixed this already.  The problem was a bad skeleton
 description: Command line tickets have a sentence for their default status, which
   means they dont show up as being open, a bad precedent.
 estimate: 1 Hour
 group: unfiled
 priority: high, normal, low
-status: open
+status: closed
 title: Command line does not default to open tickets.
