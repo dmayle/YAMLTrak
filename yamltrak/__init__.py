@@ -54,11 +54,11 @@ def issues(repositories=[], dbfolder='issues', status='open'):
         try:
             issuedb = IssueDB(repository, dbfolder=dbfolder)
         except NoRepository:
-            # No repo found
-            return None
+            # No repo found for this repository, we'll try the rest.
+            continue
         except NoIssueDB:
-            # No issue database
-            return None
+            # No issue database for this repository, we'll try the rest.
+            continue
 
         issues[path.basename(issuedb.root)] = issuedb.issues(status)
 
@@ -159,10 +159,11 @@ def init(repository, dbfolder='issues'):
         issuedb = IssueDB(repository, dbfolder=dbfolder, init=True)
     except NoRepository:
         # No repo found
-        return None
+        return False
     except NoIssueDB:
         # No issue database
-        return None
+        return False
+    return True
 
 def close(repository, id, dbfolder='issues'):
     """Sets the status of the issue on disk to close, both in it's file, and the index."""
@@ -192,14 +193,22 @@ def purge(repository, issueid, dbfolder='issues', status=['open']):
     except IOError:
         return false
 
-def _group_estimate(issues, groupname):
+def _group_estimate(issues, groupvalue, groupfield='group', groupdefault='unfiled', statuses=['open']):
     hours = 0
     minutes = 0
     for issueid, issue in issues.iteritems():
-        if issue.get('group', 'unfiled') != groupname:
+
+        if issue.get(groupfield, groupdefault) != groupvalue:
             continue
-        if 'open' not in issue.get('status','').lower():
+
+        valid_status = False
+        for status in statuses:
+            if status in issue.get('status','').lower():
+                valid_status = True
+                break
+        if not valid_status:
             continue
+
         estimate = issue.get('estimate', '')
         try:
             timeamount, timescale = estimate.split()[:2]
@@ -223,60 +232,20 @@ def _group_estimate(issues, groupname):
             continue
     return hours + (minutes // 60)
 
-def burndown(repository, groupname, dbfolder='issues'):
-    checkpoints = []
-    found = False
+def burndown(repository, groupvalue, dbfolder='issues'):
     try:
-        with open(path.join(repository, dbfolder, 'issues.yaml')) as indexfile:
-            issues = yaml.load(indexfile.read())
-        estimate = _group_estimate(issues, groupname)
-        if estimate > 0:
-            found = True
-        checkpoints.append([time()*1000, estimate])
-        myui = ui.ui()
-        repo = hg.repository(myui, repository)
-        try:
-            filectxt = repo['tip'][path.join(dbfolder, 'issues.yaml')]
-        except LookupError:
-            # The index hasn't been committed yet
-            return checkpoints
-        filerevid = filectxt.filerev()
-
-        # By default, we're working with the context of tip.  Update to the
-        # context from the latest revision.
-        filectxt = filectxt.filectx(filerevid)
-
-        while True:
-            try:
-                issues = yaml.safe_load(filectxt.data())
-            except yaml.loader.ScannerError:
-                # We have to protect from invalid issue data in the repository
-                filerevid = filectxt.filerev() - 1
-                if filerevid < 0:
-                    break
-                filectxt = filectxt.filectx(filerevid)
-                continue
-
-            estimate = _group_estimate(issues, groupname)
-            if estimate > 0:
-                found = True
-            elif found:
-                # We had good data, and now it's disappeared, we have no need
-                # to keep going back.
-                return checkpoints
-            checkpoints.append([filectxt.date()[0]*1000, estimate])
-
-            filerevid = filectxt.filerev() - 1
-            if filerevid < 0:
-                break
-            filectxt = filectxt.filectx(filerevid)
-    except IOError:
-        # Not all listed repositories have an issue tracking database, nor
-        # do they contain this particular issue.  This needs to be changed
-        # to specify the repo specifically
+        issuedb = IssueDB(repository, dbfolder=dbfolder)
+    except NoRepository:
+        # No repo found
+        return []
+    except NoIssueDB:
+        # No issue database
         return []
 
-    return checkpoints
+    checkpoints = issuedb.burndown(groupvalue, 'group', 'unfiled')
+
+    # The old API returned javascript timestamps, we perform the fixup
+    return [[timestamp*1000, estimate] for (timestamp, estimate) in checkpoints]
 
 class NoRepository(Exception):
     """Exception raised when the folder given isn't inside a DVCS."""
@@ -644,3 +613,65 @@ class IssueDB(object):
         convenience method.
         """
         return self.edit(issue={'status':'closed'}, id=id)
+
+    def burndown(self, groupvalue, groupfield='group', groupdefault='unfiled'):
+        """\
+        Return issue completing status for the given grouping.  This will
+        return a list of datestamps, and the amount of work left to do at each
+        timestamp for the lifetime of the group.
+        """
+        checkpoints = []
+
+        try:
+            with open(self._indexfile) as indexfile:
+                issues = yaml.load(indexfile.read())
+        except IOError:
+            # Not all listed repositories have an issue tracking database, nor
+            # do they contain this particular issue.  This needs to be changed
+            # to specify the repo specifically
+            return checkpoints
+
+        found = False
+        estimate = _group_estimate(issues, groupvalue, groupfield, groupdefault)
+        if estimate > 0:
+            found = True
+        checkpoints.append([time(), estimate])
+
+        try:
+            filectxt = self.repo['tip'][path.join(self.dbfolder, 'issues.yaml')]
+        except LookupError:
+            # The index hasn't been committed yet
+            return checkpoints
+
+        filerevid = filectxt.filerev()
+
+        # By default, we're working with the context of tip.  Update to the
+        # context from the latest modified revision.
+        filectxt = filectxt.filectx(filerevid)
+
+        while True:
+            try:
+                issues = yaml.safe_load(filectxt.data())
+            except yaml.loader.ScannerError:
+                # We have to protect from invalid issue data in the repository
+                filerevid = filectxt.filerev() - 1
+                if filerevid < 0:
+                    break
+                filectxt = filectxt.filectx(filerevid)
+                continue
+
+            estimate = _group_estimate(issues, groupvalue, groupfield, groupdefault)
+            if estimate > 0:
+                found = True
+            elif found:
+                # We had good data, and now it's disappeared, we have no need
+                # to keep going back.
+                return checkpoints
+            checkpoints.append([filectxt.date()[0], estimate])
+
+            filerevid = filectxt.filerev() - 1
+            if filerevid < 0:
+                break
+            filectxt = filectxt.filectx(filerevid)
+
+        return checkpoints

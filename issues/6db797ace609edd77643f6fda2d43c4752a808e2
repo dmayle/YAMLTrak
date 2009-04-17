@@ -1,4 +1,4 @@
-comment: The close command is finished.
+comment: Move the burndown command.
 description: The current system is based on functions only.  This means that its much
   more difficult to use (more arguments each time) and that there is a lot of work
   thrown away with each call.  Add an object API that can do things like share ui
