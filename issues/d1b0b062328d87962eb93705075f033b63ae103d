@@ -1,7 +1,7 @@
-comment: Opening issue
+comment: Bad copied default
 description: The status is a list, and not a text field
 estimate: 1 Hour
 group: unfiled
 priority: high, normal, low
-status: open
+status: closed
 title: New issues have bad status

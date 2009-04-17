@@ -157,7 +157,7 @@ d1b0b062328d87962eb93705075f033b63ae103d:
   estimate: 1 Hour
   group: unfiled
   priority: high, normal, low
-  status: open
+  status: closed
   title: New issues have bad status
 d2a36fe1efc5305f02e295063dc02cb3b21fe3ce:
   description: Create a command line interface, maybe with urwid, in two parts.  The
