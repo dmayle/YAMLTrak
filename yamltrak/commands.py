@@ -21,40 +21,36 @@ import os
 from argparse import ArgumentParser
 from yamltrak import IssueDB, NoRepository, NoIssueDB, init, issues as issues_command, relatedissues as related_issues
 
-def guess_issue_id(issuedb, repository):
-    try:
-        issues = issues_command([repository])[os.path.basename(repository)]
-    except KeyError:
-        # There is no issue database, or maybe just no open issues...
-        print 'No open issues found'
-        import sys
-        sys.exit(1)
+def guess_issue_id(issuedb):
+    related = issuedb.related(detail=True)
 
-    # Use repo.status to get this list
-    myui = ui.ui()
-    repo = hg.repository(myui, repository)
-    modified, added = repo.status()[:2]
-    files = modified + added
-    found = {}
-    for filename in files:
-        relatedissues = related_issues(repository, filename=filename, ids=issues.keys())
-        for issueid in relatedissues:
-            found[issueid] = issues[issueid].get('title', '')
-
-    if len(found.keys()) > 1:
-        color = None
-        print colored('Too many linked issues found, please specify one.', color, attrs=['reverse'])
-        for issueid in found:
+    if len(related) > 1:
+        print colored('Too many linked issues found, please specify one.', None, attrs=['reverse'])
+        for issueid in related:
             print colored(textwrap.fill('Issue: %s' % issueid,
-                initial_indent='    ', subsequent_indent='    '), color, attrs=[])
-            print colored(textwrap.fill(found[issueid].upper(),
-                initial_indent='    ', subsequent_indent='    '), color, attrs=[])
+                initial_indent='    ', subsequent_indent='    '), None, attrs=[])
+            print colored(textwrap.fill(related[issueid].get('title', '').upper(),
+                initial_indent='    ', subsequent_indent='    '), None, attrs=[])
 
         import sys
         sys.exit(1)
-    return found.keys()[0]
 
-def unpack_add(issuedb, repository, args):
+    issueid = related.keys()[0]
+    # Prompt user?
+    print "Found only one issue."
+    print colored(textwrap.fill('Issue: %s' % issueid,
+        initial_indent='    ', subsequent_indent='    '), None, attrs=[])
+    print colored(textwrap.fill(related[issueid].get('title', '').upper(),
+        initial_indent='    ', subsequent_indent='    '), None, attrs=[])
+    verification = raw_input("Do you want to use this issue? (Y/[N]) ")
+    if verification.lower() in ['y', 'yes', 'yeah', 'oui', 'uh-huh', 'sure', 'why not?', 'meh']:
+        return issueid
+
+    print 'Aborting'
+    import sys
+    sys.exit(1)
+
+def unpack_add(issuedb, args):
     # We should be able to avoid this somehow by using an object dictionary.
     skeleton_add = issuedb.skeleton_add
     issue = {}
@@ -66,7 +62,7 @@ def unpack_add(issuedb, repository, args):
     newid = issuedb.add(issue=issue)
     print 'Added issue: %s' % newid
 
-def unpack_list(issuedb, repository, args):
+def unpack_list(issuedb, args):
     issues = issuedb.issues(status=args.status)
     for id, issue in issues.iteritems():
         # Try to use color for clearer output
@@ -98,9 +94,9 @@ def unpack_list(issuedb, repository, args):
         print colored(textwrap.fill(issue.get('estimate',{}).get('text',''),
             initial_indent=indent, subsequent_indent=indent), color)
 
-def unpack_edit(issuedb, repository, args):
+def unpack_edit(issuedb, args):
     if not args.id:
-        args.id = guess_issue_id(issuedb, repository)
+        args.id = guess_issue_id(issuedb)
     skeleton = issuedb.skeleton
     issue = issuedb.issue(id=args.id, detail=False)[0]['data']
     newissue = {}
@@ -108,9 +104,9 @@ def unpack_edit(issuedb, repository, args):
         newissue[field] = getattr(args, field, None) or issue.get(field, skeleton[field])
     issuedb.edit(id=args.id, issue=newissue)
 
-def unpack_show(issuedb, repository, args):
+def unpack_show(issuedb, args):
     if not args.id:
-        args.id = guess_issue_id(issuedb, repository)
+        args.id = guess_issue_id(issuedb)
 
     issuedata = issuedb.issue(id=args.id, detail=args.detail)
     if not issuedata or not issuedata[0].get('data'):
@@ -155,51 +151,43 @@ def unpack_show(issuedb, repository, args):
                 print 'Changed: %s - %s' % (changeset[0].upper(), changeset[1][1])
 
 
-def unpack_related(issuedb, repository, args):
-    try:
-        issues = issues_command([repository])[os.path.basename(repository)]
-    except KeyError:
-        # There is no issue database, or maybe just no open issues...
-        print 'No open issues found'
-        return
-    if not args.files:
-        # Use repo.status to get this list
-        myui = ui.ui()
-        repo = hg.repository(myui, repository)
-        modified, added = repo.status()[:2]
-        args.files = modified + added
-    for filename in args.files:
-        relatedissues = related_issues(repository, filename=filename, ids=issues.keys())
-        color = None
-        print colored('File: %s' % filename, color, attrs=['reverse'])
-        for issueid in relatedissues:
-            print colored(textwrap.fill('Issue: %s' % issueid,
-                initial_indent='    ', subsequent_indent='    '), color, attrs=[])
-            print colored(textwrap.fill(issues[issueid].get('title', '').upper(),
-                initial_indent='    ', subsequent_indent='    '), color, attrs=[])
+def unpack_related(issuedb, args):
+    relatedissues = issuedb.related(filenames=args.files, detail=True)
 
-def unpack_init(issuedb, repository, args):
-    init(repository)
+    for issueid, issue in relatedissues.iteritems():
+        print colored(textwrap.fill('Issue: %s' % issueid,
+            initial_indent='    ', subsequent_indent='    '), None, attrs=[])
+        print colored(textwrap.fill(issue.get('title', '').upper(),
+            initial_indent='    ', subsequent_indent='    '), None, attrs=[])
+
+def unpack_init(issuedb, args):
+    try:
+        issuedb = IssueDB(args.repository, init=True)
+    except NoRepository:
+        # This means that there was no repository here.
+        print 'Unable to find a repository.'
+        import sys
+        sys.exit(1)
+    except NoIssueDB:
+        # Whoops
+        print 'Error initializing repository'
+        import sys
+        sys.exit(1)
     print 'Initialized repository'
 
-def unpack_close(issuedb, repository, args):
+def unpack_close(issuedb, args):
     if not args.id:
-        args.id = guess_issue_id(issuedb, repository)
-    issue = issuedb.issue(id=args.id, detail=False)[0]['data']
-    issue['status'] = 'closed'
-    issuedb.edit(id=args.id, issue=issue)
+        args.id = guess_issue_id(issuedb)
+    issuedb.close(args.id)
 
-def unpack_purge(issuedb, repository, args):
+def unpack_purge(issuedb, args):
     pass
 
-def unpack_burndown(issuedb, repository, args):
+def unpack_burndown(issuedb, args):
     pass
 
 def main():
     """Parse the command line options and react to them."""
-    # We need to attempt to initialize a repo, and if it works, use the repo
-    # root instead of 'here'
-    here = os.getcwd()
     try:
         issuedb = IssueDB(os.getcwd())
     except NoRepository:
@@ -218,7 +206,8 @@ def main():
         args = parser.parse_args()
         # We don't have a valid database, so we call with none.  I suspect this
         # may just change to calling issuedb with an init parameter.
-        args.func(None, os.getcwd(), args)
+        args.repository = os.getcwd()
+        args.func(None, args)
         return
 
     skeleton = issuedb.skeleton
@@ -295,7 +284,7 @@ def main():
     #                                     "for a group of issues.")
     # parser_burn.set_defaults(func=unpack_burndown)
     args = parser.parse_args()
-    args.func(issuedb, issuedb.root, args)
+    args.func(issuedb, args)
 
 
 if __name__ == '__main__':

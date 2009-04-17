@@ -179,19 +179,16 @@ def close(repository, id, dbfolder='issues'):
     return issuedb.close(id)
 
 def purge(repository, issueid, dbfolder='issues', status=['open']):
-    # This just deletes the issue, we should keep them around temporarily and call it fixed.
-    return True
-    myui = ui.ui()
-    repo = hg.repository(myui, repository)
-    hgcommands.remove(myui, repo, path.join(repository, dbfolder, issueid))
     try:
-        with open(path.join(repository, dbfolder, 'issues.yaml'), 'r') as indexfile:
-            issues = yaml.load(indexfile.read())
-        with open(path.join(repository, dbfolder, 'issues.yaml'), 'w') as indexfile:
-            del issues[issueid]
-            indexfile.write(yaml.safe_dump(issues, default_flow_style=False))
-    except IOError:
-        return false
+        issuedb = IssueDB(repository, dbfolder=dbfolder)
+    except NoRepository:
+        # No repo found
+        return None
+    except NoIssueDB:
+        # No issue database
+        return None
+
+    return issuedb.purge(id)
 
 def _group_estimate(issues, groupvalue, groupfield='group', groupdefault='unfiled', statuses=['open']):
     hours = 0
@@ -331,7 +328,7 @@ class IssueDB(object):
         hgcommands.add(self.ui, self.repo, self._skeletonfile)
         hgcommands.add(self.ui, self.repo, self._skeleton_addfile)
         hgcommands.add(self.ui, self.repo, self._indexfile)
-        return true
+        return True
 
     @property
     def _indexfile(self):
@@ -348,7 +345,14 @@ class IssueDB(object):
         """Helper that returns the full path of the issues add skeleton file."""
         return path.join(self.root, self.dbfolder, self.__skeleton_addfile)
 
-    def related(self, filenames, ids=[]):
+    def related(self, filenames=None, ids=None, detail=False, status='open'):
+        """\
+        Find the list of issue ids, among the ones that are provided, that are
+        linked by changeset the the filenames provided.  If no filenames are
+        provided, than this will choose the list of modified and uncommitted
+        files.  If no ids are provided, this will pull the current list of
+        issues with the status provided, which defaults to 'open'.
+        """
         # Use revision to walk backwards intelligently.
         # Change this to only accept one repository and to return a history
         issues = []
@@ -357,9 +361,28 @@ class IssueDB(object):
         # ['modified', 'added', 'removed', 'deleted', 'unknown', 'ignored', 'clean']
         statuses = self.repo.status()
         modified, added = statuses[:2]
+        uncommitted = modified + added
+
+        # If there were no filenames listed, we'll look un the set of edited,
+        # but not yet committed files.
+        if not filenames:
+            # It doesn't make sense to check added files, because they can't be
+            # related by changeset
+            filenames = modified
+
+        # Filter out the indexfile, because it gets related to every single
+        # issue.
+        if self._indexfile in filenames:
+            filenames.remove(self._indexfile)
+
+        # If no ticket ids are provided, take the set of open (by default)
+        # issues.
+        allissues = self.issues(status=status)
+        if not ids:
+            ids = [id for (id, issue) in allissues.iteritems()]
 
         for id in ids:
-            if path.join(self.dbfolder, id) in added or path.join(self.dbfolder, id) in modified:
+            if path.join(self.dbfolder, id) in uncommitted:
                 # We consider all uncommitted issues to be related, since they
                 # would become related on commit.
                 issues.append(id)
@@ -389,6 +412,9 @@ class IssueDB(object):
                     filectxt = filectxt.filectx(filerevid)
             except StopIteration:
                 pass
+
+        if detail:
+            return dict((id, allissues[id]) for id in issues)
 
         return issues
 
@@ -593,7 +619,12 @@ class IssueDB(object):
         try:
             with open(self._indexfile, 'r') as indexfile:
                 index = yaml.load(indexfile.read())
+        except IOError:
+            return false
 
+        if issue is  None:
+            del(index[id])
+        else:
             # We only write out the properties listed in the skeleton to the index.
             indexissue = {}
             for field in index['skeleton']:
@@ -601,10 +632,9 @@ class IssueDB(object):
                     indexissue[field] = issue[field]
             index[id] = indexissue
 
-            with open(self._indexfile, 'w') as indexfile:
-                indexfile.write(yaml.safe_dump(index, default_flow_style=False))
-        except IOError:
-            return false
+        with open(self._indexfile, 'w') as indexfile:
+            indexfile.write(yaml.safe_dump(index, default_flow_style=False))
+
         return True
 
     def close(self, id):
@@ -613,6 +643,18 @@ class IssueDB(object):
         convenience method.
         """
         return self.edit(issue={'status':'closed'}, id=id)
+
+    def purge(self, id):
+        """\
+        Purge an issue from the database.  This schedules the issue file for
+        removal from the repository, and removes any info from the index.
+        """
+        if not id:
+            return
+
+        hgcommands.remove(self.ui, self.repo, path.join(self.root, self.dbfolder, id, force=True))
+
+        return self._update_index(id, None)
 
     def burndown(self, groupvalue, groupfield='group', groupdefault='unfiled'):
         """\

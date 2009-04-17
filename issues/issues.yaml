@@ -82,7 +82,7 @@
   estimate: 3 Days
   group: unfiled
   priority: high, normal, low
-  status: open
+  status: closed
   title: Add an object based API for ease and speed
 7974ac348b6025cb932efbb437c998a30ec60d85:
   description: Create a skeleton ticket, and an index file with a ticket skeleton
