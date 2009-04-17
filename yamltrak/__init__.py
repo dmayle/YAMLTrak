@@ -175,36 +175,7 @@ def close(repository, id, dbfolder='issues'):
         # No issue database
         return None
 
-    return issuedb.edit(issue={'status':'closed'}, id=id)
-    if not id:
-        return false
-    try:
-        with open(path.join(repository, dbfolder, id)) as issuefile:
-            issue = yaml.load(issuefile.read())
-        issue['status'] = 'closed'
-        with open(path.join(repository, dbfolder, id), 'w') as issuefile:
-            issuefile.write(yaml.safe_dump(issue, default_flow_style=False))
-    except IOError:
-        return false
-
-    # For the index pass, we always make sure to use the data in the full
-    # issue. This helps to prevent problems of synchronization from the
-    # non-normalized database.
-    try:
-        with open(path.join(repository, dbfolder, 'issues.yaml'), 'r') as indexfile:
-            index = yaml.load(indexfile.read())
-
-        # We only write out the properties listed in the skeleton to the index.
-        indexissue = {}
-        for key in index['skeleton']:
-            if key in issue:
-                indexissue[key] = issue[key]
-        index[id] = indexissue
-
-        with open(path.join(repository, dbfolder, 'issues.yaml'), 'w') as indexfile:
-            indexfile.write(yaml.safe_dump(index, default_flow_style=False))
-    except IOError:
-        return false
+    return issuedb.close(id)
 
 def purge(repository, issueid, dbfolder='issues', status=['open']):
     # This just deletes the issue, we should keep them around temporarily and call it fixed.
@@ -390,7 +361,7 @@ class IssueDB(object):
             skeletonfile.write(yaml.dump(INDEX, default_flow_style=False))
         hgcommands.add(self.ui, self.repo, self._skeletonfile)
         hgcommands.add(self.ui, self.repo, self._skeleton_addfile)
-        hgcommands.add(self.ui, self.repo, self.indexfile)
+        hgcommands.add(self.ui, self.repo, self._indexfile)
         return true
 
     @property
@@ -640,20 +611,36 @@ class IssueDB(object):
         except IOError:
             return false
 
+        return self._update_index(id, saveissue)
+
+
+    def _update_index(self, id, issue):
+        """\
+        Take the given issue and update the index file, filtering based on the
+        index skeleton. This should only be called with the full issue data,
+        not just changed values, to ensure that we have a fully up to date
+        index if the skeleton changes.
+        """
         try:
-            # This is done pretty often, as well.  Abstract this out.
             with open(self._indexfile, 'r') as indexfile:
                 index = yaml.load(indexfile.read())
 
             # We only write out the properties listed in the skeleton to the index.
             indexissue = {}
             for field in index['skeleton']:
-                if field in saveissue:
-                    indexissue[field] = saveissue[field]
+                if field in issue:
+                    indexissue[field] = issue[field]
             index[id] = indexissue
 
-            with open(path.join(self.root, self.dbfolder, 'issues.yaml'), 'w') as indexfile:
+            with open(self._indexfile, 'w') as indexfile:
                 indexfile.write(yaml.safe_dump(index, default_flow_style=False))
         except IOError:
             return false
         return True
+
+    def close(self, id):
+        """\
+        Set the status on the given issue to closed.  This is just a
+        convenience method.
+        """
+        return self.edit(issue={'status':'closed'}, id=id)
