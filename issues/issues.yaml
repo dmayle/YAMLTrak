@@ -132,6 +132,13 @@ ab08f0d7b9a0db232bacb091c44ab52333ad2a68:
   estimate: 1 Hour
   status: closed
   title: Status must be exactly open or ticket does not make list
+b4f97ccc57f54d3e0569565251e837815a656798:
+  description: Cut a new release of YAMLTrak
+  estimate: 1 Hour
+  group: unfiled
+  priority: high, normal, low
+  status: open
+  title: Cut a new release
 bd0fe6c135b663d347cafd7a8e22e99b90c8550d:
   description: Rename this package so that there's no confusion with trac
   estimate: 1 hour
