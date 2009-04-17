@@ -166,6 +166,16 @@ def init(repository, dbfolder='issues'):
 
 def close(repository, id, dbfolder='issues'):
     """Sets the status of the issue on disk to close, both in it's file, and the index."""
+    try:
+        issuedb = IssueDB(repository, dbfolder=dbfolder)
+    except NoRepository:
+        # No repo found
+        return None
+    except NoIssueDB:
+        # No issue database
+        return None
+
+    return issuedb.edit(issue={'status':'closed'}, id=id)
     if not id:
         return false
     try:
