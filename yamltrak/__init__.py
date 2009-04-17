@@ -375,7 +375,7 @@ class IssueDB(object):
         if self._indexfile in filenames:
             filenames.remove(self._indexfile)
 
-        # If no ticket ids are provided, take the set of open (by default)
+        # If no issue ids are provided, take the set of open (by default)
         # issues.
         allissues = self.issues(status=status)
         if not ids:

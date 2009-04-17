@@ -14,12 +14,11 @@
 
 # You should have received a copy of the GNU Lesser General Public License
 # along with YAMLTrak.  If not, see <http://www.gnu.org/licenses/>.
+import os
 import textwrap
 from termcolor import colored
-from mercurial import hg, ui
-import os
 from argparse import ArgumentParser
-from yamltrak import IssueDB, NoRepository, NoIssueDB, init, issues as issues_command, relatedissues as related_issues
+from yamltrak import IssueDB, NoRepository, NoIssueDB
 
 def guess_issue_id(issuedb):
     related = issuedb.related(detail=True)
