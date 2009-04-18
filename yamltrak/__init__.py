@@ -640,7 +640,7 @@ class IssueDB(object):
 
         return True
 
-    def close(self, id):
+    def close(self, id, comment=None):
         """\
         Set the status on the given issue to closed.  This is just a
         convenience method.

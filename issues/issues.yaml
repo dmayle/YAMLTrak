@@ -60,6 +60,14 @@
   estimate: 1 hour
   status: closed
   title: Better UI/Controls for new uncommitted tickets
+59829a0fb7e6c45c5cb62acce73ae2e346aa2b01:
+  description: You usually add comments when closing an issue, so it would be a nice
+    shortcut for the API
+  estimate: 1 Hour
+  group: unfiled
+  priority: high
+  status: open
+  title: Issue close should accept comments
 5bd91eb17ec4:
   description: Set up a PREVIEW background if there are uncommitted files.  Enable
     commit button.

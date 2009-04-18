@@ -1,0 +1,8 @@
+comment: Opening issue
+description: You usually add comments when closing an issue, so it would be a nice
+  shortcut for the API
+estimate: 1 Hour
+group: unfiled
+priority: high
+status: open
+title: Issue close should accept comments
