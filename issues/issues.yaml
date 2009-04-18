@@ -66,7 +66,7 @@
   estimate: 1 Hour
   group: unfiled
   priority: high
-  status: open
+  status: closed
   title: Issue close should accept comments
 5bd91eb17ec4:
   description: Set up a PREVIEW background if there are uncommitted files.  Enable

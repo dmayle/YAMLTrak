@@ -177,7 +177,7 @@ def unpack_init(issuedb, args):
 def unpack_close(issuedb, args):
     if not args.id:
         args.id = guess_issue_id(issuedb)
-    issuedb.close(args.id)
+    issuedb.close(args.id, args.comment)
 
 def unpack_purge(issuedb, args):
     pass
@@ -270,6 +270,8 @@ def main():
 
     # Close an issue
     parser_close = subparsers.add_parser('close', help="Close an issue.")
+    parser_close.add_argument('-c', '--comment', default=None,
+        help='An optional closing comment to set on the ticket.')
     parser_close.set_defaults(func=unpack_close)
     parser_close.add_argument('id', nargs='?',
         help='The issue id to close.')

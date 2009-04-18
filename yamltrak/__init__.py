@@ -645,6 +645,9 @@ class IssueDB(object):
         Set the status on the given issue to closed.  This is just a
         convenience method.
         """
+        if comment is not None:
+            return self.edit(issue={'status':'closed','comment':comment}, id=id)
+
         return self.edit(issue={'status':'closed'}, id=id)
 
     def purge(self, id):

@@ -1,8 +1,8 @@
-comment: Opening issue
+comment: Added closing comments to API.
 description: You usually add comments when closing an issue, so it would be a nice
   shortcut for the API
 estimate: 1 Hour
 group: unfiled
 priority: high
-status: open
+status: closed
 title: Issue close should accept comments
