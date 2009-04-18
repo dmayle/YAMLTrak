@@ -1,7 +1,7 @@
-comment: Opening issue
+comment: Cut version 0.6.1
 description: Cut a new release of YAMLTrak
 estimate: 1 Hour
 group: unfiled
 priority: high, normal, low
-status: open
+status: closed
 title: Cut a new release

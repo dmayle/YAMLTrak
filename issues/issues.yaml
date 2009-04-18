@@ -137,7 +137,7 @@ b4f97ccc57f54d3e0569565251e837815a656798:
   estimate: 1 Hour
   group: unfiled
   priority: high, normal, low
-  status: open
+  status: closed
   title: Cut a new release
 bd0fe6c135b663d347cafd7a8e22e99b90c8550d:
   description: Rename this package so that there's no confusion with trac
