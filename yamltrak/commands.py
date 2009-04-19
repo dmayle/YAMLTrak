@@ -159,9 +159,9 @@ def unpack_related(issuedb, args):
         print colored(textwrap.fill(issue.get('title', '').upper(),
             initial_indent='    ', subsequent_indent='    '), None, attrs=[])
 
-def unpack_init(issuedb, args):
+def unpack_dbinit(issuedb, args):
     try:
-        issuedb = IssueDB(args.repository, init=True)
+        issuedb = IssueDB(args.repository, dbinit=True)
     except NoRepository:
         # This means that there was no repository here.
         print 'Unable to find a repository.'
@@ -169,10 +169,10 @@ def unpack_init(issuedb, args):
         sys.exit(1)
     except NoIssueDB:
         # Whoops
-        print 'Error initializing repository'
+        print 'Error initializing issued database'
         import sys
         sys.exit(1)
-    print 'Initialized repository'
+    print 'Initialized issue database'
 
 def unpack_close(issuedb, args):
     if not args.id:
@@ -199,12 +199,11 @@ def main():
         # initialize one.
         parser = ArgumentParser(prog='yt', description='YAMLTrak is a distributed version controlled issue tracker.')
         subparsers = parser.add_subparsers(help=None, dest='command')
-        parser_init = subparsers.add_parser('init', help="Initialize issue "
-                                            "database.")
-        parser_init.set_defaults(func=unpack_init)
+        parser_dbinit = subparsers.add_parser('dbinit',
+            help="Initialize the issue database.")
+        parser_dbinit.set_defaults(func=unpack_dbinit)
         args = parser.parse_args()
-        # We don't have a valid database, so we call with none.  I suspect this
-        # may just change to calling issuedb with an init parameter.
+        # We don't have a valid database, so we call with none.
         args.repository = os.getcwd()
         args.func(None, args)
         return
@@ -262,10 +261,10 @@ def main():
         'supplied, and the list of currently uncommitted files (excluding '
         'issues) will be checked.')
 
-    # Initialize DV
-    parser_init = subparsers.add_parser('init', help="Initialize issue "
-                                        "database.")
-    parser_init.set_defaults(func=unpack_init)
+    # Initialize DB
+    parser_dbinit = subparsers.add_parser('dbinit',
+        help="Initialize the issue database.")
+    parser_dbinit.set_defaults(func=unpack_dbinit)
 
     # Close an issue
     parser_close = subparsers.add_parser('close', help="Close an issue.")

@@ -183,7 +183,7 @@ d7785854217a94ec20bb758dd4b0199e0d2d639f:
   estimate: 1 hour
   group: unfiled
   priority: high
-  status: open
+  status: closed
   title: yt commands should not overlap hg commands
 e50ae42a8ba3:
   description: Issue tracking using a versioned database would represent an entirely

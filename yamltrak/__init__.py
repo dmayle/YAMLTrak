@@ -154,9 +154,9 @@ def new(repository, issue, dbfolder='issues', status='open'):
 
     return issuedb.new(issue=issue, status=status)
 
-def init(repository, dbfolder='issues'):
+def dbinit(repository, dbfolder='issues'):
     try:
-        issuedb = IssueDB(repository, dbfolder=dbfolder, init=True)
+        issuedb = IssueDB(repository, dbfolder=dbfolder, dbinit=True)
     except NoRepository:
         # No repo found
         return False
@@ -269,7 +269,7 @@ class IssueDB(object):
     parameters. In addition, it caches some of the work performed so that
     multiple operations run faster.
     """
-    def __init__(self, folder, dbfolder='issues', indexfile='issues.yaml', init=False):
+    def __init__(self, folder, dbfolder='issues', indexfile='issues.yaml', dbinit=False):
         self.dbfolder = dbfolder
         self.__indexfile = indexfile
         self.__skeletonfile = 'skeleton'
@@ -285,17 +285,17 @@ class IssueDB(object):
 
         # We've got a valid repository, let's look for an issue database.
         if not path.exists(self._indexfile) or not path.exists(self._skeletonfile):
-            if init and self._init():
+            if dbinit and self._dbinit():
                 return
             raise NoIssueDB(self.root)
         # Look for the old name
         if not path.exists(self._skeleton_newfile):
             self.__skeleton_newfile = 'newticket'
         if not path.exists(self._skeleton_newfile):
-            if init:
+            if dbinit:
                 # If we don't do this here, we initialize with the wrong name.
                 self.__skeleton_newfile = 'skeleton_new'
-                if self._init():
+                if self._dbinit():
                     return
             raise NoIssueDB(self.root)
 
@@ -312,7 +312,7 @@ class IssueDB(object):
                 raise NoRepository(folder)
             checkrepo = root
 
-    def _init(self):
+    def _dbinit(self):
         """\
         Internal method for initializing the database.  It's not much use on
         the outside, since you can't get an IssueDB object with an
