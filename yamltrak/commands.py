@@ -49,7 +49,7 @@ def guess_issue_id(issuedb):
     import sys
     sys.exit(1)
 
-def unpack_add(issuedb, args):
+def unpack_new(issuedb, args):
     # We should be able to avoid this somehow by using an object dictionary.
     skeleton_add = issuedb.skeleton_add
     issue = {}
@@ -58,8 +58,8 @@ def unpack_add(issuedb, args):
         if issue[field] is None:
             issue[field] = skeleton_add[field]
 
-    newid = issuedb.add(issue=issue)
-    print 'Added issue: %s' % newid
+    newid = issuedb.new(issue=issue)
+    print 'Added new issue: %s' % newid
 
 def unpack_list(issuedb, args):
     issues = issuedb.issues(status=args.status)
@@ -221,15 +221,14 @@ def main():
 
     subparsers = parser.add_subparsers(help=None, dest='command')
 
-    # Adding an issue
-    parser_add = subparsers.add_parser('add', help="Add an issue.")
-    parser_add.set_defaults(func=unpack_add)
+    # Adding a new issue
+    parser_new = subparsers.add_parser('new', help="Add a new issue.")
+    parser_new.set_defaults(func=unpack_new)
     for field, help in skeleton.iteritems():
         if field not in skeleton_add:
-            parser_add.add_argument('-' + field[0], '--' + field, help=help)
+            parser_new.add_argument('-' + field[0], '--' + field, help=help)
     for field, help in skeleton_add.iteritems():
-        parser_add.add_argument('-' + field[0], '--' + field, required=True, help=skeleton[field])
-    #parser_add.add_argument(
+        parser_new.add_argument('-' + field[0], '--' + field, required=True, help=skeleton[field])
 
     # Editing an issue
     parser_edit = subparsers.add_parser('edit', help="Edit an issue.")

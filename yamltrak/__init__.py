@@ -141,8 +141,8 @@ def _hex_node(node_binary):
     """Convert a binary node string into a 40-digit hex string"""
     return ''.join('%0.2x' % ord(letter) for letter in node_binary)
 
-def add(repository, issue, dbfolder='issues', status='open'):
-    """Add an issue to the database"""
+def new(repository, issue, dbfolder='issues', status='open'):
+    """Add a new issue to the database"""
     try:
         issuedb = IssueDB(repository, dbfolder=dbfolder)
     except NoRepository:
@@ -555,27 +555,28 @@ class IssueDB(object):
             self._skeleton_add = self._skeleton_add[0]['data']
         return self._skeleton_add
 
-    def add(self, issue, status='open'):
+    def new(self, issue, status='open'):
         """\
-        Add an issue to the issue database.  Returns an issueid if successful.
-        All fields are filtered by those in the add issue skeleton.
+        Add a new issue to the issue database.  Returns an issueid if
+        successful.  All fields are filtered by those in the add issue
+        skeleton.
         """
-        addissue = {}
+        newissue = {}
         for field, default in self.skeleton_add.iteritems():
-            addissue[field] = issue.get(field, default)
+            newissue[field] = issue.get(field, default)
 
-        if 'status' not in addissue:
-            addissue['status'] = status
-        if 'comment' not in addissue:
-            addissue['comment'] = 'Opening issue'
+        if 'status' not in newissue:
+            newissue['status'] = status
+        if 'comment' not in newissue:
+            newissue['comment'] = 'Opening issue'
 
         # This can fail in an empty repository.  Handle this
-        hgcommands.tag(self.ui, self.repo, NEW_ISSUE_TAG, force=True, message='ISSUEPREP: %s' % addissue.get('title', 'No issue title'))
+        hgcommands.tag(self.ui, self.repo, NEW_ISSUE_TAG, force=True, message='ISSUEPREP: %s' % newissue.get('title', 'No issue title'))
         context = self.repo['tip']
         issueid = _hex_node(context.node())
         try:
             with open(path.join(self.root, self.dbfolder, issueid), 'w') as issuefile:
-                issuefile.write(yaml.safe_dump(addissue, default_flow_style=False))
+                issuefile.write(yaml.safe_dump(newissue, default_flow_style=False))
             hgcommands.add(self.ui, self.repo, path.join(self.root, self.dbfolder, issueid))
         except IOError:
             return false

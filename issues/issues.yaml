@@ -176,6 +176,15 @@ d2a36fe1efc5305f02e295063dc02cb3b21fe3ce:
   priority: green, red, or black
   status: closed
   title: Make a command line interface
+d7785854217a94ec20bb758dd4b0199e0d2d639f:
+  description: If at some point we embed yt into hg with an extension, it would be
+    confusing to have similar commands for different things.  We should rename as
+    necessary to avoid confusion
+  estimate: 1 hour
+  group: unfiled
+  priority: high
+  status: open
+  title: yt commands should not overlap hg commands
 e50ae42a8ba3:
   description: Issue tracking using a versioned database would represent an entirely
     new paradigm in issue management.
