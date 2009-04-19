@@ -1,4 +1,4 @@
-comment: switched over add to new
+comment: Finished up cleanup up on the add to new command.
 description: If at some point we embed yt into hg with an extension, it would be confusing
   to have similar commands for different things.  We should rename as necessary to
   avoid confusion

@@ -35,7 +35,7 @@ SKELETON = {
     'group': 'unfiled',
     'priority': 'high, normal, low',
     'comment': 'The current comment on this issue.'}
-SKELETON_ADD = {
+SKELETON_NEW = {
     'title': 'A title for the issue',
     'description': 'A detailed description of this issue.',
     'estimate': 'A time estimate for completion'}
@@ -152,7 +152,7 @@ def new(repository, issue, dbfolder='issues', status='open'):
         # No issue database
         return None
 
-    return issuedb.add(issue=issue, status=status)
+    return issuedb.new(issue=issue, status=status)
 
 def init(repository, dbfolder='issues'):
     try:
@@ -273,11 +273,11 @@ class IssueDB(object):
         self.dbfolder = dbfolder
         self.__indexfile = indexfile
         self.__skeletonfile = 'skeleton'
-        self.__skeleton_addfile = 'skeleton_add'
+        self.__skeleton_newfile = 'skeleton_new'
 
         # If we ever do a lookup on the skeleton, we'll cache it for speed.
         self._skeleton = None
-        self._skeleton_add = None
+        self._skeleton_new = None
         self.ui = ui.ui()
 
         self.repo = self.__find_repo(folder)
@@ -289,12 +289,12 @@ class IssueDB(object):
                 return
             raise NoIssueDB(self.root)
         # Look for the old name
-        if not path.exists(self._skeleton_addfile):
-            self.__skeleton_addfile = 'newticket'
-        if not path.exists(self._skeleton_addfile):
+        if not path.exists(self._skeleton_newfile):
+            self.__skeleton_newfile = 'newticket'
+        if not path.exists(self._skeleton_newfile):
             if init:
                 # If we don't do this here, we initialize with the wrong name.
-                self.__skeleton_addfile = 'skeleton_add'
+                self.__skeleton_newfile = 'skeleton_new'
                 if self._init():
                     return
             raise NoIssueDB(self.root)
@@ -324,12 +324,12 @@ class IssueDB(object):
             pass
         with open(self._skeletonfile, 'w') as skeletonfile:
             skeletonfile.write(yaml.dump(SKELETON, default_flow_style=False))
-        with open(self._skeleton_addfile, 'w') as skeletonfile:
-            skeletonfile.write(yaml.dump(SKELETON_ADD, default_flow_style=False))
+        with open(self._skeleton_newfile, 'w') as skeletonfile:
+            skeletonfile.write(yaml.dump(SKELETON_NEW, default_flow_style=False))
         with open(self._indexfile, 'w') as skeletonfile:
             skeletonfile.write(yaml.dump(INDEX, default_flow_style=False))
         hgcommands.add(self.ui, self.repo, self._skeletonfile)
-        hgcommands.add(self.ui, self.repo, self._skeleton_addfile)
+        hgcommands.add(self.ui, self.repo, self._skeleton_newfile)
         hgcommands.add(self.ui, self.repo, self._indexfile)
         return True
 
@@ -344,9 +344,9 @@ class IssueDB(object):
         return path.join(self.root, self.dbfolder, self.__skeletonfile)
 
     @property
-    def _skeleton_addfile(self):
-        """Helper that returns the full path of the issues add skeleton file."""
-        return path.join(self.root, self.dbfolder, self.__skeleton_addfile)
+    def _skeleton_newfile(self):
+        """Helper that returns the full path of the issues new skeleton file."""
+        return path.join(self.root, self.dbfolder, self.__skeleton_newfile)
 
     def related(self, filenames=None, ids=None, detail=False, status='open'):
         """\
@@ -543,26 +543,26 @@ class IssueDB(object):
         return self._skeleton
 
     @property
-    def skeleton_add(self):
+    def skeleton_new(self):
         """\
-        Return the issue database add skeleton, with a list of fields and
+        Return the issue database new issue skeleton, with a list of fields and
         default values.
         """
-        if self._skeleton_add:
-            return self._skeleton_add
-        self._skeleton_add = self.issue(self.__skeleton_addfile, detail=False)
-        if self._skeleton_add:
-            self._skeleton_add = self._skeleton_add[0]['data']
-        return self._skeleton_add
+        if self._skeleton_new:
+            return self._skeleton_new
+        self._skeleton_new = self.issue(self.__skeleton_newfile, detail=False)
+        if self._skeleton_new:
+            self._skeleton_new = self._skeleton_new[0]['data']
+        return self._skeleton_new
 
     def new(self, issue, status='open'):
         """\
         Add a new issue to the issue database.  Returns an issueid if
-        successful.  All fields are filtered by those in the add issue
+        successful.  All fields are filtered by those in the new issue
         skeleton.
         """
         newissue = {}
-        for field, default in self.skeleton_add.iteritems():
+        for field, default in self.skeleton_new.iteritems():
             newissue[field] = issue.get(field, default)
 
         if 'status' not in newissue:

@@ -51,12 +51,12 @@ def guess_issue_id(issuedb):
 
 def unpack_new(issuedb, args):
     # We should be able to avoid this somehow by using an object dictionary.
-    skeleton_add = issuedb.skeleton_add
+    skeleton_new = issuedb.skeleton_new
     issue = {}
-    for field in skeleton_add:
+    for field in skeleton_new:
         issue[field] = getattr(args, field, None)
         if issue[field] is None:
-            issue[field] = skeleton_add[field]
+            issue[field] = skeleton_new[field]
 
     newid = issuedb.new(issue=issue)
     print 'Added new issue: %s' % newid
@@ -210,7 +210,7 @@ def main():
         return
 
     skeleton = issuedb.skeleton
-    skeleton_add = issuedb.skeleton_add
+    skeleton_new = issuedb.skeleton_new
 
     parser = ArgumentParser(prog='yt', description='YAMLTrak is a distributed version controlled issue tracker.')
     # parser.add_argument('-r', '--repository',
@@ -225,9 +225,9 @@ def main():
     parser_new = subparsers.add_parser('new', help="Add a new issue.")
     parser_new.set_defaults(func=unpack_new)
     for field, help in skeleton.iteritems():
-        if field not in skeleton_add:
+        if field not in skeleton_new:
             parser_new.add_argument('-' + field[0], '--' + field, help=help)
-    for field, help in skeleton_add.iteritems():
+    for field, help in skeleton_new.iteritems():
         parser_new.add_argument('-' + field[0], '--' + field, required=True, help=skeleton[field])
 
     # Editing an issue
