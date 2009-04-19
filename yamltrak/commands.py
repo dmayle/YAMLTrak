@@ -17,7 +17,7 @@
 import os
 import textwrap
 from termcolor import colored
-from argparse import ArgumentParser
+from yamltrak.argparse import ArgumentParser
 from yamltrak import IssueDB, NoRepository, NoIssueDB
 
 def guess_issue_id(issuedb):

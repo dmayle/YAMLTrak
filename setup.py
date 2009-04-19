@@ -19,7 +19,7 @@ import sys
 from setuptools import setup
 
 
-version = '0.7'
+version = '0.6.2'
 
 # We monkeypatch setuptools to perform script installs the way distutils does.
 # Calling pkg_resources is too time intensive for a serious command line
@@ -65,7 +65,7 @@ setup(name='YAMLTrak',
       install_requires=[
           # -*- Extra requirements: -*-
           "PyYaml==3.08",
-          "argparse>=0.9.0", # Once my issue is fixed, specify the version instead of 0.9.0
+          #"argparse>=0.9.0", # Temporarily embedding a patched version that fixes the bugs I care about.
           "Mercurial>=1.2",
           "termcolor==0.1.1",
       ],
